@@ -112,7 +112,6 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .box>svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
 .box>svg path{stroke:var(--red-d);fill:rgba(20,5,7,.55);transition:stroke .15s}
 .box.f>svg path{stroke:var(--v)}
-.box .pre{position:relative;color:var(--v);font:600 13px/1 Rajdhani,sans-serif;padding-bottom:9px;flex:none;opacity:.8}
 textarea{position:relative;flex:1;resize:none;border:0;outline:0;background:transparent;color:var(--v-t);
   font:500 16px/1.5 "Noto Sans TC",sans-serif;padding:4px 0;height:32px;max-height:132px;overflow-y:auto;scrollbar-width:thin}
 textarea::placeholder{color:rgba(169,241,204,.35)}
@@ -226,7 +225,6 @@ textarea::placeholder{color:rgba(169,241,204,.35)}
       <div></div>
       <form class="box" id="box" autocomplete="off">
         <svg aria-hidden="true"><path stroke-width="1.5" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg>
-        <span class="pre" aria-hidden="true">V&gt;</span>
         <label class="sr" for="ta">以 V 的身分輸入訊息</label>
         <textarea id="ta" rows="1" placeholder="以 V 的身分回覆…" enterkeyhint="send"></textarea>
         <button class="send" id="send" type="submit" disabled>傳送<svg viewBox="0 0 13 13" fill="currentColor" aria-hidden="true"><path d="M0 0l13 6.5L0 13l2-6.5z"/></svg></button>
@@ -267,13 +265,19 @@ const C={
   judy:{name:"茱蒂・艾法瑞茲",short:"茱蒂",en:"JUDY ALVAREZ",g:"茱",code:"JA-07",
     role:"幻舞技師",base:"夜城",
     rel:"交情很深的朋友。一起扛過幾件不能說的事，現在有事沒事都會傳訊息。",
-    t:[["個性","直率、心軟，看不慣欺負人的事"],["語氣","口語、愛吐槽，熟了會用顏文字"],["回覆","偏短，常分兩則連發"]],
+    t:[["個性","直率、心軟，看不慣欺負人的事；講到在乎的事會變笨拙"],["語氣","口語、愛吐槽，常用 -.- ;) xD <3 和「……」"],["回覆","短句連發，害羞時拆得更碎"]],
     seed:[[-985,"n","V，你還醒著嗎"],[-984,"n","上次那段幻舞我修好了，畫面乾淨多了。"],[-981,"v","醒著。修好就好，辛苦了"],[-980,"n","下次換你陪我測試，不准逃 ;)"]],
     pool:{
-      q:["嗯……問得好，我想一下","你問我？我比較想問你 -.-","老實說我也不確定，但我站你這邊","這個嘛，見面再說比較好"],
-      thx:["跟我客氣什麼","好啦，收下了 :)","欠我一杯，記帳"],
-      tired:["你最近是不是都沒睡？","先去休息。我是認真的","別硬撐，V"],
-      any:["收到。我手邊在剪片，等我一下","你又在哪裡惹事了？老實招來","哈，這個我喜歡","好啦好啦，聽你的","這種事你應該早點跟我說 -.-","我懂。真的。","等等，渲染跑完了……好，繼續說","下次碰面我請你喝一杯"]}},
+      greet:[["嗨嗨","剛好在等渲染，你來得正是時候"],["在啊","怎麼了？又闖禍了嗎 -.-"],["早","我咖啡才喝一半，講話可能會很衝，先說"],["喔，是你","等我一下……好，現在注意力全部給你 ;)"]],
+      q:["嗯……問得好，我想一下","你問我？我比較想問你 -.-","老實說我也不確定，但我站你這邊","這個嘛，見面再說比較好",["嗯……","這題有點難","讓我想一下再回你好嗎"]],
+      thx:["跟我客氣什麼","好啦，收下了 :)","欠我一杯，記帳",["別這樣講啦","你也幫過我很多次啊"]],
+      praise:[["停","不要突然這樣講","我會不知道要回什麼 -.-"],["……","你今天是吃錯什麼東西嗎 xD"],["哈，知道就好","……不過還是謝啦"]],
+      sorry:[["幹嘛道歉啦","真的沒事，我沒那麼小氣"],["好啦，原諒你","下不為例 ;)"]],
+      work:[["別提了","這段的情緒軌一直在打架，我已經對著它罵了半小時"],["進度還行","弄好第一版給你看，你要誠實講感想喔"],["我剛把一大段雜訊清掉","那種乾淨的感覺……你不懂，超爽"]],
+      worry:[["等等","你有沒有受傷？說實話"],["又來了……","你可不可以有一次是平安到家再傳訊息給我"],["V，我是認真的","小心一點，好嗎"]],
+      tired:["你最近是不是都沒睡？","先去休息。我是認真的","別硬撐，V",["那就去睡","我是說真的，手機放下"]],
+      bye:[["好","晚安，別又熬夜"],["嗯，去吧","有事再敲我 :)"],["掰掰","……記得吃東西"]],
+      any:["收到。我手邊在剪片，等我一下","你又在哪裡惹事了？老實招來","哈，這個我喜歡","好啦好啦，聽你的","這種事你應該早點跟我說 -.-","我懂。真的。","等等，渲染跑完了……好，繼續說","下次碰面我請你喝一杯",["哈哈哈","等等，我笑到差點把咖啡打翻"],["嗯哼","然後呢？繼續說"],["你真的很奇怪耶","不過我不討厭 xD"]]}},
   panam:{name:"帕娜・琶爾莫",short:"帕娜",en:"PANAM PALMER",g:"帕",code:"PP-11",
     role:"阿德卡多家族出身的傭兵",base:"夜城外的荒原",
     rel:"一起開過車、也一起闖過險的夥伴。嘴上不說，但營地永遠替你留個位置。",
@@ -429,13 +433,22 @@ const MockProvider={
 /* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
 function mockCompose(id,text,history){
   const p=C[id].pool,lastNpc=[...history].reverse().find(m=>m.role==="assistant");
-  const pick=(arr,avoid)=>{let x;for(let i=0;i<6;i++){x=arr[Math.floor(R()*arr.length)];if(x!==avoid)break}return x};
-  let k="any";
-  if(/謝|感恩|多謝/.test(text))k="thx";
-  else if(/累|睏|睡|好煩|撐不住/.test(text))k="tired";
-  else if(/[?？]|嗎|呢$|怎麼|為什麼|要不要/.test(text))k="q";
-  const out=[pick(p[k],lastNpc&&lastNpc.text)];
-  if(R()<.3)out.push(pick(p.any,out[0]));
+  const rules=[
+    ["bye",/晚安|睡了|掰|拜拜|先這樣|下次聊|先下線/],
+    ["sorry",/對不起|抱歉|不好意思|sorry/i],
+    ["thx",/謝|感恩|多謝/],
+    ["praise",/好棒|厲害|可愛|漂亮|好讚|佩服|超強/],
+    ["worry",/受傷|流血|打架|危險|中槍|開槍|出事|醫院/],
+    ["tired",/累|睏|好煩|撐不住/],
+    ["work",/幻舞|剪片|工作|案子|編輯|渲染/],
+    ["greet",/^\s*(嗨|哈囉|安安|早安?|在嗎|在不在|hi|hey|hello)/i],
+    ["q",/[?？]|嗎|呢$|怎麼|為什麼|要不要/]];
+  const hit=rules.find(([k,re])=>p[k]&&re.test(text)),k=hit?hit[0]:"any";
+  const first=v=>Array.isArray(v)?v[0]:v,avoid=lastNpc&&lastNpc.text;
+  let x;for(let i=0;i<6;i++){x=p[k][Math.floor(R()*p[k].length)];if(first(x)!==avoid)break}
+  if(Array.isArray(x))return x.slice();
+  const out=[x];
+  if(R()<.3){const y=p.any.filter(v=>!Array.isArray(v)&&v!==x);if(y.length)out.push(y[Math.floor(R()*y.length)])}
   return out;
 }
 /* 之後接 API 的寫法（示意，未啟用）：
