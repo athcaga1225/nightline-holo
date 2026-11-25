@@ -36,7 +36,10 @@ body{
   overflow:hidden;-webkit-font-smoothing:antialiased;
 }
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-:focus-visible{outline:1.5px solid var(--npc);outline-offset:2px}
+:focus{outline:none}
+button:focus-visible{outline:1px solid var(--npc);outline-offset:2px}
+textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
+*{-webkit-tap-highlight-color:transparent}
 .en{font-family:Rajdhani,"Noto Sans TC",sans-serif;font-weight:600;letter-spacing:.04em}
 
 .stage{height:var(--app-h);display:flex;align-items:stretch;gap:32px;
