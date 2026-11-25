@@ -153,6 +153,10 @@ textarea::placeholder{color:rgba(169,241,204,.35)}
 .pf dd{margin:0;color:#d9e6e4;font-weight:400;line-height:1.6}
 .pf h3{font-size:12px;font-weight:500;color:var(--mute);margin:18px 0 0;padding-top:12px;border-top:1px solid var(--red-f)}
 .pf .act{margin-top:16px;display:flex;gap:10px}
+.seg{display:flex;margin:0 0 8px}
+.seg button{height:32px;padding:0 14px;font-size:13px;border:1px solid var(--red-d);color:var(--mute)}
+.seg button+button{border-left:0}
+.seg button[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
 .btn{height:36px;padding:0 14px;font-size:14px;border:1px solid var(--red-d);color:var(--red)}
 .btn.pri{background:var(--red);color:#fff;border-color:var(--red)}
 .pf .fan{margin-top:16px;font-size:12px;line-height:1.6;color:var(--mute);font-weight:400}
@@ -265,6 +269,20 @@ const C={
   judy:{name:"茱蒂・艾法瑞茲",short:"茱蒂",en:"JUDY ALVAREZ",g:"茱",code:"JA-07",
     role:"幻舞技師",base:"夜城",
     rel:"交情很深的朋友。一起扛過幾件不能說的事，現在有事沒事都會傳訊息。",
+    lover:{
+      rel:"在一起的戀人。嘴上還是愛吐槽，但會主動說想你、擔心你，講到心裡話就害羞。",
+      pool:{
+        greet:[["嗨","剛好在想你，你就出現了"],["在啊","等你等到我都把整段素材剪完了 -.-"],["早","昨晚有沒有好好睡？不准說謊"],["你終於上線了","我是說……嗨 ;)"]],
+        love:[["……","你怎麼突然這樣","我也是啦 -.-"],["我也想你","超想。"],["過來","讓我抱一下就好"]],
+        q:[["嗯……","你這樣問，我要認真想一下"],["你問我喔？","答案大概是：跟你一起的話都可以 xD"],["我不知道耶","見面的時候再告訴你，好不好"]],
+        thx:[["跟我還客氣什麼","……不過我收下了 <3"],["這有什麼","你開心我就開心啊"]],
+        praise:[["等等","你不要一直這樣講","我會整個人縮進椅子裡 -.-"],["……","你明知道我接不了這種話"],["好啦","你也是。超級是。"]],
+        sorry:[["傻瓜","我又沒有生氣"],["好啦，原諒你","但你欠我一個抱抱"]],
+        work:[["今天的素材很難搞","但我一邊剪一邊想到你，就沒那麼煩了"],["我剛完成一段","你是第一個能看的人，誰都不給"]],
+        worry:[["V","你現在在哪？有沒有受傷？"],["我不想聽你說沒事","你先回家，我等你"],["拜託你小心一點","我不想再接到那種電話了"]],
+        tired:[["那就快去睡","我陪你，等你睡著再下線"],["過來吧","我這邊的沙發借你，枕頭也借你"]],
+        bye:[["好","晚安，夢裡見 <3"],["嗯，去吧","明天換我先傳訊息給你"],["掰掰","……還是有點捨不得 -.-"]],
+        any:["嗯哼，繼續說，我在聽","好啦好啦，都聽你的 <3",["哈哈哈","你怎麼這麼好笑"],["我剛剛在想","下次放假我們去海邊吧，就我們兩個"],["你知道嗎","有你在，夜城好像沒那麼吵了"],["……","沒事，只是想多看一下你的訊息"]]}},
     t:[["個性","直率、心軟，看不慣欺負人的事；講到在乎的事會變笨拙"],["語氣","口語、愛吐槽，常用 -.- ;) xD <3 和「……」"],["回覆","短句連發，害羞時拆得更碎"]],
     seed:[[-985,"n","V，你還醒著嗎"],[-984,"n","上次那段幻舞我修好了，畫面乾淨多了。"],[-981,"v","醒著。修好就好，辛苦了"],[-980,"n","下次換你陪我測試，不准逃 ;)"]],
     pool:{
@@ -319,6 +337,8 @@ if (oldJudySeed) {
   save();
 }
 if(!C[S.active])S.active="judy";
+ORDER.forEach(k=>{if(C[k].lover&&!S.c[k].mode)S.c[k].mode="lover"});
+const relOf=id=>C[id].lover&&S.c[id].mode==="lover"?C[id].lover.rel:C[id].rel;
 let saveT;function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function saveSoon(){clearTimeout(saveT);saveT=setTimeout(save,300)}
 
@@ -395,11 +415,12 @@ function renderSheet(){
   }else{
     const c=C[S.active];
     b.innerHTML=`<div class="pf">${cardHTML(S.active)}<h2>${esc(c.name)}</h2><div class="enn en">${esc(c.en)} · ${esc(c.code)}</div>
-      <dl><dt>身分</dt><dd>${esc(c.role)}</dd><dt>所在</dt><dd>${esc(c.base)}</dd><dt>與 V</dt><dd>${esc(c.rel)}</dd></dl>
+      <dl><dt>身分</dt><dd>${esc(c.role)}</dd><dt>所在</dt><dd>${esc(c.base)}</dd><dt>與 V</dt><dd>${c.lover?`<div class="seg" role="group" aria-label="與 V 的關係">${[["friend","朋友"],["lover","戀人"]].map(([v,l])=>`<button data-mode="${v}" aria-pressed="${(S.c[S.active].mode||"friend")===v}">${l}</button>`).join("")}</div>`:""}${esc(relOf(S.active))}</dd></dl>
       <h3>基本設定</h3><dl>${c.t.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join("")}<dt>模式</dt><dd>模擬回覆（Mock Mode），未連接 AI</dd></dl>
       <div class="act"><button class="btn" id="pfR">重設這段對話</button></div>
       <p class="fan">NIGHTLINE // HOLO 為非官方粉絲作品，與 CD PROJEKT RED 無關。角色名稱權利屬原權利人，對話內容皆為原創模擬文字。</p></div>`;
     $("pfR").onclick=askReset;
+    b.querySelectorAll(".seg button").forEach(x=>x.onclick=()=>{S.c[S.active].mode=x.dataset.mode;save();renderSheet()});
   }
 }
 
@@ -432,9 +453,10 @@ const MockProvider={
 };
 /* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
 function mockCompose(id,text,history){
-  const p=C[id].pool,lastNpc=[...history].reverse().find(m=>m.role==="assistant");
+  const lv=C[id].lover&&S.c[id].mode==="lover"?C[id].lover.pool:null,p=lv?{...C[id].pool,...lv}:C[id].pool,lastNpc=[...history].reverse().find(m=>m.role==="assistant");
   const rules=[
     ["bye",/晚安|睡了|掰|拜拜|先這樣|下次聊|先下線/],
+    ["love",/愛你|想你|喜歡你|抱抱|親親/],
     ["sorry",/對不起|抱歉|不好意思|sorry/i],
     ["thx",/謝|感恩|多謝/],
     ["praise",/好棒|厲害|可愛|漂亮|好讚|佩服|超強/],
@@ -476,7 +498,7 @@ async function runReply(id,text){
   await sleep(350);if(S.c[id]!==room)return;
   setTyping(id,true);
   let msgs;
-  try{msgs=await replyProvider.reply({contactId:id,profile:{name:C[id].name,role:C[id].role,rel:C[id].rel,traits:C[id].t},text,history:toHistory(room.log)})}
+  try{msgs=await replyProvider.reply({contactId:id,profile:{name:C[id].name,role:C[id].role,relationship:S.c[id].mode||"friend",rel:relOf(id),traits:C[id].t},text,history:toHistory(room.log)})}
   catch(e){if(S.c[id]!==room)return;typing[id]=false;deliver(id,"訊號中斷，這則訊息沒有收到回覆。","sys");return}
   if(S.c[id]!==room)return;
   msgs=(Array.isArray(msgs)?msgs:[msgs]).map(String).filter(m=>m.trim());
@@ -520,7 +542,7 @@ function askReset(){const c=C[S.active];$("dlgT").textContent=`重設與${c.shor
   dlg.classList.add("open");$("dNo").focus()}
 const closeDlg=()=>{dlg.classList.remove("open")};
 $("hR").onclick=askReset;$("dNo").onclick=closeDlg;dlg.onclick=e=>{if(e.target===dlg)closeDlg()};
-$("dYes").onclick=()=>{const id=S.active;S.c[id]=seedOf(id);typing[id]=false;pend[id]=0;save();closeDlg();
+$("dYes").onclick=()=>{const id=S.active,mode=S.c[id].mode;S.c[id]=seedOf(id);if(mode)S.c[id].mode=mode;typing[id]=false;pend[id]=0;save();closeDlg();
   ta.value="";size();renderLog();renderHead();toBottom();if(sheet.classList.contains("open"))renderSheet();ta.focus()};
 
 /* ---- 快捷鍵 ---- */
