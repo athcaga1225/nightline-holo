@@ -32,7 +32,7 @@ body{
     radial-gradient(90% 70% at 78% 8%,rgba(120,22,30,.55),transparent 60%),
     radial-gradient(70% 60% at 10% 100%,rgba(70,10,14,.6),transparent 70%),
     linear-gradient(170deg,#2b080b 0%,#1a0507 48%,#0b0203 100%);
-  color:var(--ink);font:500 15.5px/1.55 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  color:var(--ink);font:500 15.5px/1.55 "Noto Sans TC","Noto Sans CJK TC","PingFang TC","Microsoft JhengHei",sans-serif;
   overflow:hidden;-webkit-font-smoothing:antialiased;
 }
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
@@ -86,14 +86,15 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .day:first-child{margin-top:6px}
 .grp{display:flex;flex-direction:column;align-items:flex-start}
 .grp.v{align-items:flex-end}
-.grp+.grp{margin-top:16px}
-.grp.join{margin-top:3px}
-.bub{position:relative;max-width:min(88%,34em);padding:6px 13px 13px;color:var(--t-n);font-size:16px;line-height:1.65;margin-top:5px}
+.grp+.grp{margin-top:14px}
+.grp.join{margin-top:6px}
+.bub{position:relative;max-width:min(86%,34em);padding:3px 12px 8px 9px;color:var(--t-n);font-size:16px;line-height:1.5;margin-top:6px}
 .bub:first-child{margin-top:0}
-.v .bub{color:var(--t-v)}
+.v .bub{color:var(--t-v);padding:3px 9px 8px 12px}
 .bub svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .bub .tx{position:relative;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
-.stamp{font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#6a8f93;margin:6px 2px 0;white-space:nowrap}
+.stamp{font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#6a8f93;margin:5px 1px 0;white-space:nowrap}
+.sysm{margin:14px 0;text-align:center;font-size:12px;color:var(--red)}
 .dots{position:relative;display:flex;gap:4px;padding:6px 2px 3px}
 .dots i{width:5px;height:5px;background:var(--t-n);opacity:.3;animation:bl 1.1s infinite}
 .dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}
@@ -183,6 +184,8 @@ textarea::placeholder{color:rgba(169,241,204,.35)}
   .idc{width:32px;height:48px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
   .tab span{display:none}.tab{font-size:18px}.who{font-size:18px}.sep{padding:0 7px 7px}
   .redl span{display:none}
+  #sysId{display:none}.sys{gap:8px}
+  .term.typing-on .hints{display:none}
   .body{margin-top:12px}
   .log{padding:4px 10px 14px 2px}
   .bub{max-width:86%}
@@ -327,11 +330,11 @@ function dayLabel(t){const d=new Date(t),n=new Date();const y=new Date(n);y.setD
   return (d.getMonth()+1)+"月"+d.getDate()+"日"}
 
 /* ---- 框形：細線 SVG，切角與尾角線寬一致 ---- */
-const O=.5;
+const O=.5; /* 尾角高度 TD 已含在 .bub 下內距（3 + 5） */
 function shape(kind,w,h){
   if(kind==="box"){const c=9;return `M${O} ${O}H${w-O}V${h-c}L${w-c} ${h-O}H${O}Z`}
   /* NPC：左上切角、右下切角、左下箭頭尾角；V 左右鏡像 */
-  const C=9,TD=7,TW=10,hb=h-O-TD;
+  const C=7,TD=5,TW=8,hb=h-O-TD;
   if(kind==="n")return `M${C} ${O}H${w-O}V${hb-C}L${w-O-C} ${hb}H${O+TW}L${O} ${h-O}V${C}Z`;
   return `M${O} ${O}H${w-C}L${w-O} ${C}V${h-O}L${w-O-TW} ${hb}H${O+C}L${O} ${hb-C}Z`;
 }
@@ -356,6 +359,7 @@ function renderLog(){
     h+=`<div class="grp ${f==="v"?"v":"n"}">`+grp.map(m=>bub(f==="v"?"v":"n",`<span class="tx">${esc(m.text)}</span>`)).join("")
       +`<div class="stamp en">${hm(grp[grp.length-1].t)}</div></div>`;grp=[]};
   L.forEach(m=>{
+    if(m.from==="sys"){flush();h+=`<div class="sysm" role="status">${esc(m.text)}</div>`;prev=m;return}
     if(!prev||dayKey(prev.t)!==dayKey(m.t)){flush();h+=`<div class="day">${dayLabel(m.t)}</div>`}
     else if(prev.from!==m.from||m.t-prev.t>6*60000)flush();
     grp.push(m);prev=m});
@@ -400,25 +404,74 @@ const nearBottom=()=>log.scrollHeight-log.scrollTop-log.clientHeight<56;
 const toBottom=()=>{log.scrollTop=log.scrollHeight;newCount=0;updJump()};
 function updJump(){const j=$("jump"),far=log.scrollHeight-log.scrollTop-log.clientHeight>240;
   j.classList.toggle("on",newCount>0||far);$("jumpTx").textContent=newCount?`${newCount} 則新訊息`:"回到最新訊息"}
-log.addEventListener("scroll",()=>{if(nearBottom())newCount=0;updJump()},{passive:true});
+/* 停在最底時，版面變矮（手機鍵盤展開、視窗縮放）仍黏在最新訊息；往上讀時不動 */
+let stick=true;
+log.addEventListener("scroll",()=>{stick=nearBottom();if(stick)newCount=0;updJump()},{passive:true});
+const roLog=new ResizeObserver(()=>{if(stick)log.scrollTop=log.scrollHeight});roLog.observe(log);
 $("jump").onclick=()=>log.scrollTo({top:log.scrollHeight,behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});
 function refresh(isMsg){const near=nearBottom(),top=log.scrollTop;renderLog();renderHead();
   if(near)toBottom();else{log.scrollTop=top;if(isMsg)newCount++;updJump()}}
 
-/* ---- 模擬回覆 ---- */
-function pick(arr,avoid){let x;for(let i=0;i<5;i++){x=arr[Math.floor(R()*arr.length)];if(x!==avoid)break}return x}
-function compose(id,text){const p=C[id].pool,L=S.c[id].log,last=L.length?L[L.length-1].text:"";
-  let k="any";if(/謝|感恩|多謝/.test(text))k="thx";else if(/累|睏|睡|好煩|撐不住/.test(text))k="tired";else if(/[?？]|嗎|呢$|怎麼|為什麼|要不要/.test(text))k="q";
-  const out=[pick(p[k],last)];if(R()<.3)out.push(pick(p.any,out[0]));return out}
-function setTyping(id,v){typing[id]=v;if(id===S.active)refresh(false);if(sheet.classList.contains("open"))renderSheet()}
-function deliver(id,text){S.c[id].log.push({id:"m"+Date.now()+R(),from:"n",text,t:Date.now()});
-  if(id!==S.active)S.c[id].unread++;save();
-  if(id===S.active)refresh(true);else renderHead();if(sheet.classList.contains("open"))renderSheet()}
-async function reply(id,text){pend[id]=(pend[id]||0)+1;
-  await sleep(450+R()*500);setTyping(id,true);
-  for(const m of compose(id,text)){await sleep(Math.min(2600,750+m.length*55+R()*400));
-    typing[id]=false;deliver(id,m);if(pend[id]>0)setTyping(id,true)}
-  await sleep(200);pend[id]--;if(!pend[id])setTyping(id,false)}
+/* ==== 回覆來源 ============================================
+   介面只負責：送出 → 顯示輸入中 → 顯示回覆。
+   回覆內容一律由 replyProvider 提供，之後換成後端 API 只需改這一段。
+   約定：replyProvider.reply(req) → Promise<string[]>（一則或多則回覆）
+     req = { contactId, profile:{name,role,rel,traits}, text, history:[{role:"user"|"assistant", text, t}] }
+   失敗時丟出錯誤，介面會在聊天室顯示「訊號中斷」，不寫入角色台詞。
+   ========================================================== */
+const MockProvider={
+  name:"mock",
+  async reply({contactId,text,history}){
+    await sleep(700+R()*900);                       /* 模擬網路與思考時間 */
+    return mockCompose(contactId,text,history);
+  }
+};
+/* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
+function mockCompose(id,text,history){
+  const p=C[id].pool,lastNpc=[...history].reverse().find(m=>m.role==="assistant");
+  const pick=(arr,avoid)=>{let x;for(let i=0;i<6;i++){x=arr[Math.floor(R()*arr.length)];if(x!==avoid)break}return x};
+  let k="any";
+  if(/謝|感恩|多謝/.test(text))k="thx";
+  else if(/累|睏|睡|好煩|撐不住/.test(text))k="tired";
+  else if(/[?？]|嗎|呢$|怎麼|為什麼|要不要/.test(text))k="q";
+  const out=[pick(p[k],lastNpc&&lastNpc.text)];
+  if(R()<.3)out.push(pick(p.any,out[0]));
+  return out;
+}
+/* 之後接 API 的寫法（示意，未啟用）：
+const ApiProvider={name:"api",async reply(req){
+  const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(req)});
+  if(!r.ok)throw new Error("HTTP "+r.status);return (await r.json()).messages;}};
+*/
+let replyProvider=MockProvider;
+
+/* ---- 聊天流程（與回覆來源無關） ---- */
+const queue={};
+function setTyping(id,v){typing[id]=v;renderHead();if(id===S.active)refresh(false);if(sheet.classList.contains("open"))renderSheet()}
+function deliver(id,text,from="n"){S.c[id].log.push({id:"m"+Date.now()+R(),from,text,t:Date.now()});
+  if(id!==S.active&&from==="n")S.c[id].unread++;save();
+  if(id===S.active)refresh(from==="n");else renderHead();if(sheet.classList.contains("open"))renderSheet()}
+function toHistory(L){return L.filter(m=>m.from!=="sys").map(m=>({role:m.from==="v"?"user":"assistant",text:m.text,t:m.t}))}
+/* 每個聊天室各自排隊，回覆一定回到發問的聊天室 */
+function requestReply(id,text){
+  pend[id]=(pend[id]||0)+1;
+  queue[id]=(queue[id]||Promise.resolve()).then(()=>runReply(id,text)).catch(()=>{}).then(()=>{
+    pend[id]--;if(!pend[id]&&typing[id])setTyping(id,false)});
+}
+async function runReply(id,text){
+  const room=S.c[id];                                /* 若中途重設，舊回覆作廢 */
+  await sleep(350);if(S.c[id]!==room)return;
+  setTyping(id,true);
+  let msgs;
+  try{msgs=await replyProvider.reply({contactId:id,profile:{name:C[id].name,role:C[id].role,rel:C[id].rel,traits:C[id].t},text,history:toHistory(room.log)})}
+  catch(e){if(S.c[id]!==room)return;typing[id]=false;deliver(id,"訊號中斷，這則訊息沒有收到回覆。","sys");return}
+  if(S.c[id]!==room)return;
+  msgs=(Array.isArray(msgs)?msgs:[msgs]).map(String).filter(m=>m.trim());
+  for(let i=0;i<msgs.length;i++){
+    if(i>0){setTyping(id,true);await sleep(Math.min(1800,500+msgs[i].length*35));if(S.c[id]!==room)return}
+    typing[id]=false;deliver(id,msgs[i]);
+  }
+}
 
 /* ---- 輸入 ---- */
 let composing=false;
@@ -427,12 +480,12 @@ ta.addEventListener("compositionstart",()=>composing=true);
 ta.addEventListener("compositionend",()=>setTimeout(()=>composing=false,0));
 ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){if(composing||e.isComposing||e.keyCode===229)return;e.preventDefault();send()}});
 ta.addEventListener("input",()=>{S.c[S.active].draft=ta.value;size();saveSoon()});
-ta.addEventListener("focus",()=>{box.classList.add("f");if(nearBottom())setTimeout(toBottom,250)});
-ta.addEventListener("blur",()=>box.classList.remove("f"));
+ta.addEventListener("focus",()=>{box.classList.add("f");document.querySelector(".term").classList.add("typing-on")});
+ta.addEventListener("blur",()=>{box.classList.remove("f");document.querySelector(".term").classList.remove("typing-on")});
 box.addEventListener("submit",e=>{e.preventDefault();send();ta.focus()});
 function send(){const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
   const id=S.active;S.c[id].log.push({id:"m"+Date.now(),from:"v",text,t:Date.now()});S.c[id].draft="";ta.value="";size();save();
-  renderLog();toBottom();reply(id,text)}
+  renderLog();toBottom();requestReply(id,text)}
 
 /* ---- 切換／面板 ---- */
 function switchTo(id){if(!C[id])return;scrollPos[S.active]=nearBottom()?null:log.scrollTop;
@@ -454,7 +507,7 @@ function askReset(){const c=C[S.active];$("dlgT").textContent=`重設與${c.shor
   dlg.classList.add("open");$("dNo").focus()}
 const closeDlg=()=>{dlg.classList.remove("open")};
 $("hR").onclick=askReset;$("dNo").onclick=closeDlg;dlg.onclick=e=>{if(e.target===dlg)closeDlg()};
-$("dYes").onclick=()=>{const id=S.active;S.c[id]=seedOf(id);typing[id]=false;save();closeDlg();
+$("dYes").onclick=()=>{const id=S.active;S.c[id]=seedOf(id);typing[id]=false;pend[id]=0;save();closeDlg();
   ta.value="";size();renderLog();renderHead();toBottom();if(sheet.classList.contains("open"))renderSheet();ta.focus()};
 
 /* ---- 快捷鍵 ---- */
@@ -467,8 +520,7 @@ document.addEventListener("keydown",e=>{
 
 /* ---- 手機鍵盤：以可視高度鎖住版面，輸入區不被遮住 ---- */
 const vv=window.visualViewport;
-function fitVV(){if(!vv)return;const near=nearBottom();document.documentElement.style.setProperty("--app-h",vv.height+"px");
-  window.scrollTo(0,0);if(near)requestAnimationFrame(toBottom)}
+function fitVV(){if(!vv)return;document.documentElement.style.setProperty("--app-h",vv.height+"px");window.scrollTo(0,0)}
 if(vv){vv.addEventListener("resize",fitVV);fitVV()}
 
 renderHead();renderLog();ta.value=S.c[S.active].draft||"";size();toBottom();
