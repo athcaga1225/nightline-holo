@@ -85,7 +85,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .grp.v{align-items:flex-end}
 .grp+.grp{margin-top:16px}
 .grp.join{margin-top:3px}
-.bub{position:relative;max-width:min(88%,34em);padding:7px 12px;color:var(--t-n);font-size:16px;line-height:1.65;margin-top:5px}
+.bub{position:relative;max-width:min(88%,34em);padding:6px 13px 13px;color:var(--t-n);font-size:16px;line-height:1.65;margin-top:5px}
 .bub:first-child{margin-top:0}
 .v .bub{color:var(--t-v)}
 .bub svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
@@ -320,8 +320,10 @@ function dayLabel(t){const d=new Date(t),n=new Date();const y=new Date(n);y.setD
 const O=.5;
 function shape(kind,w,h){
   if(kind==="box"){const c=9;return `M${O} ${O}H${w-O}V${h-c}L${w-c} ${h-O}H${O}Z`}
-  /* v2 框形：左上 9、右下 9、左下 8 切角；兩方同形 */
-  return `M9 ${O}H${w-O}V${h-9}L${w-9} ${h-O}H8L${O} ${h-8}V9Z`;
+  /* NPC：左上切角、右下切角、左下箭頭尾角；V 左右鏡像 */
+  const C=9,TD=7,TW=10,hb=h-O-TD;
+  if(kind==="n")return `M${C} ${O}H${w-O}V${hb-C}L${w-O-C} ${hb}H${O+TW}L${O} ${h-O}V${C}Z`;
+  return `M${O} ${O}H${w-C}L${w-O} ${C}V${h-O}L${w-O-TW} ${hb}H${O+C}L${O} ${hb-C}Z`;
 }
 function draw(el){
   const w=el.offsetWidth,h=el.offsetHeight;if(!w||!h)return;
