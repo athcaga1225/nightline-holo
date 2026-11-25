@@ -1,0 +1,38 @@
+{
+  "sources": [
+    {
+      "id": "user_screenshots_2026_11",
+      "type": "official_game_screenshot",
+      "description": "使用者提供的 Cyberpunk 2077 官方繁中版遊戲簡訊截圖（17 張，合併為 12 組）",
+      "stored_in_repo": false,
+      "private_transcript_path": "characters/judy/private/canon-dialogues.local.json",
+      "transcription_verified": false,
+      "note": "原文不收錄於公開 repo；需對照原圖校驗特殊符號（例如醉酒段落末則的魚形文字表情）"
+    },
+    {
+      "id": "nightline_persona_spec_v1",
+      "type": "project_spec",
+      "description": "NIGHTLINE｜茱蒂角色人格與原作簡訊資料庫 V1.0（使用者整理的人格分析與語言規範）",
+      "stored_in_repo": "summarized"
+    },
+    {
+      "id": "nightline_dynamic_context_spec_v1",
+      "type": "project_spec",
+      "description": "NIGHTLINE｜NPC 即時時間與動態生活情境系統 V1.0",
+      "stored_in_repo": "summarized"
+    }
+  ],
+  "private_transcript_format": {
+    "dialogues": [
+      {
+        "id": "judy_sms_morning_001",
+        "messages": [
+          {
+            "speaker": "judy|v",
+            "text": "…"
+          }
+        ]
+      }
+    ]
+  }
+}

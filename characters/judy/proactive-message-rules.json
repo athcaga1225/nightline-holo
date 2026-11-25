@@ -1,0 +1,67 @@
+{
+  "_note": "本專案的虛構生活延伸，非官方設定。只作為活動選擇的參考權重，不是固定班表。 茱蒂主動傳訊息的觸發條件、頻率與冷卻。使用者可在人物資料開關。",
+  "enabled_by_default": true,
+  "cooldown_hours": 5,
+  "max_per_day": 2,
+  "skip_if_v_active_within_minutes": 20,
+  "triggers": {
+    "project_completed": {
+      "label": "完成一段幻舞",
+      "relationships": [
+        "friend",
+        "trusted_partner",
+        "lover"
+      ],
+      "probability": 0.8
+    },
+    "breakthrough": {
+      "label": "找到新的處理方式",
+      "relationships": [
+        "trusted_partner",
+        "lover"
+      ],
+      "probability": 0.4
+    },
+    "woke_up": {
+      "label": "起床後想到 V",
+      "relationships": [
+        "lover"
+      ],
+      "probability": 0.3,
+      "min_hours_since_interaction": 6
+    },
+    "call_grandma_end": {
+      "label": "跟外婆聊完",
+      "relationships": [
+        "lover"
+      ],
+      "probability": 0.35
+    },
+    "meet_friends_end": {
+      "label": "跟朋友碰面後",
+      "relationships": [
+        "friend",
+        "lover"
+      ],
+      "probability": 0.3
+    },
+    "drinking_midway": {
+      "label": "喝酒中（醉酒狀態）",
+      "relationships": [
+        "lover"
+      ],
+      "probability": 0.4
+    }
+  },
+  "phases": {
+    "on_open": "重新開啟網站時依經過時間推進後產生，只送最新一則，時間戳記為實際產生時間",
+    "while_open": "網站開著時由計時器依實際時間差檢查",
+    "background": "網站關閉時的背景訊息：需後端排程、雲端資料庫與 Web Push，GitHub Pages 無法執行，尚未實作"
+  },
+  "never": [
+    "每天固定早安／午安／晚安",
+    "吃飯了沒",
+    "今天過得怎麼樣",
+    "為什麼沒有找我"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "_note": "本專案的虛構生活延伸，非官方設定。只作為活動選擇的參考權重，不是固定班表。",
+  "timelines": {
+    "working_at_lizzie": {
+      "label": "仍在莉茲工作的時期",
+      "locations": [
+        "apartment",
+        "lizzies_basement",
+        "city",
+        "transit"
+      ]
+    },
+    "left_lizzie": {
+      "label": "已離開莉茲的時期",
+      "locations": [
+        "apartment",
+        "city",
+        "transit"
+      ]
+    },
+    "left_night_city": {
+      "label": "已離開夜城的時期",
+      "locations": [
+        "apartment",
+        "city",
+        "transit"
+      ],
+      "labels": {
+        "apartment": "住處",
+        "city": "外面"
+      }
+    }
+  },
+  "default_timeline": "working_at_lizzie",
+  "locations": {
+    "apartment": {
+      "label": "公寓"
+    },
+    "lizzies_basement": {
+      "label": "莉茲地下室"
+    },
+    "city": {
+      "label": "外面（夜城）"
+    },
+    "transit": {
+      "label": "移動中"
+    }
+  },
+  "travel_minutes": {
+    "apartment>lizzies_basement": [
+      20,
+      35
+    ],
+    "lizzies_basement>apartment": [
+      20,
+      35
+    ],
+    "apartment>city": [
+      15,
+      30
+    ],
+    "city>apartment": [
+      15,
+      30
+    ],
+    "city>lizzies_basement": [
+      15,
+      30
+    ],
+    "lizzies_basement>city": [
+      10,
+      20
+    ]
+  },
+  "rule": "地點改變一定要經過移動活動（location=transit），不得瞬間換地點。"
+}

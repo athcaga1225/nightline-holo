@@ -227,6 +227,12 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   .hints{gap:4px 14px}.hint.static{display:none}.note{font-size:10px}
   .sheet{width:100%;border:0}
 }
+#dbg{position:fixed;right:0;top:0;bottom:0;width:min(420px,100%);overflow:auto;z-index:40;background:rgba(12,4,6,.96);border-left:1px solid var(--red-d);padding:14px 16px 30px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#d8e4e2}
+#dbg h2{margin:0 0 8px;font:600 15px/1.3 "Noto Sans TC",sans-serif;color:var(--red)}#dbg h2 small{color:var(--mute);font-weight:400}
+#dbg h3{margin:14px 0 6px;font:600 13px/1.3 "Noto Sans TC",sans-serif;color:#b9e0e1}
+#dbg dl{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:3px 8px;margin:0}#dbg dt{color:var(--mute)}#dbg dd{margin:0}
+#dbg .dbtn{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}#dbg button,#dbg select,#dbg input{font:inherit;color:#d8e4e2;background:#1d0a0d;border:1px solid var(--red-d);padding:4px 8px;min-height:30px}
+#dbg .dbev{margin:0;padding-left:1.2em}#dbg .dbev span{color:var(--mute)}#dbg pre{white-space:pre-wrap;word-break:break-all;margin:0;color:#9fd6d6;font-size:12px}
 </style>
 </head>
 <body>
@@ -307,7 +313,7 @@ const C={
       rel:"在一起的戀人。嘴上還是愛吐槽，但會主動說想你、擔心你，講到心裡話就害羞。",
       pool:{
         greet:[["嗨","剛好在想你，你就出現了"],["在啊","等你等到我都把整段素材剪完了 -.-"],["早","昨晚有沒有好好睡？不准說謊"],["你終於上線了","我是說……嗨 ;)"]],
-        love:[["……","你怎麼突然這樣","我也是啦 -.-"],["我也想你","超想。"],["過來","讓我抱一下就好"]],
+        love:[["……","你怎麼突然這樣","我也是啦 -.-"],["我也想你","超想。"],["過來","讓我抱一下就好"],["我也想你，calabacita",";)"]],
         q:[["嗯……","你這樣問，我要認真想一下"],["你問我喔？","答案大概是：跟你一起的話都可以 xD"],["我不知道耶","見面的時候再告訴你，好不好"]],
         thx:[["跟我還客氣什麼","……不過我收下了 <3"],["這有什麼","你開心我就開心啊"]],
         praise:[["等等","你不要一直這樣講","我會整個人縮進椅子裡 -.-"],["……","你明知道我接不了這種話"],["好啦","你也是。超級是。"]],
@@ -327,8 +333,8 @@ const C={
       sorry:[["幹嘛道歉啦","真的沒事，我沒那麼小氣"],["好啦，原諒你","下不為例 ;)"]],
       work:[["別提了","這段的情緒軌一直在打架，我已經對著它罵了半小時"],["進度還行","弄好第一版給你看，你要誠實講感想喔"],["我剛把一大段雜訊清掉","那種乾淨的感覺……你不懂，超爽"]],
       worry:[["等等","你有沒有受傷？說實話"],["又來了……","你可不可以有一次是平安到家再傳訊息給我"],["V，我是認真的","小心一點，好嗎"]],
-      tired:["你最近是不是都沒睡？","先去休息。我是認真的","別硬撐，V",["那就去睡","我是說真的，手機放下"]],
-      bye:[["好","晚安，別又熬夜"],["嗯，去吧","有事再敲我 :)"],["掰掰","……記得吃東西"]],
+      tired:["都忙完了嗎？","辛苦了",["今天的委託很麻煩？","還是只是累？"],["那先休息吧","晚點再聊也行"]],
+      bye:[["好","晚安"],["嗯，去吧","有事再敲我 :)"],["掰掰","明天再聊"]],
       any:["收到。我手邊在剪片，等我一下","你又在哪裡惹事了？老實招來","哈，這個我喜歡","好啦好啦，聽你的","這種事你應該早點跟我說 -.-","我懂。真的。","等等，渲染跑完了……好，繼續說","下次碰面我請你喝一杯",["哈哈哈","等等，我笑到差點把咖啡打翻"],["嗯哼","然後呢？繼續說"],["你真的很奇怪耶","不過我不討厭 xD"]]}},
   panam:{name:"帕娜・琶爾莫",short:"帕娜",en:"PANAM PALMER",g:"帕",code:"PP-11",
     role:"阿德卡多家族出身的傭兵",base:"夜城外的荒原",
@@ -386,6 +392,8 @@ function personaOf(id,mode){
    patchMessages(id, [{seq, text}])    修改指定訊息的文字（只用於更新預設開場台詞）
    mergeContacts(plan)                 單一交易合併多位 NPC 的訊息與設定，重複的略過；
                                        任何一步失敗就整筆不寫入（遷移、匯入用）
+   getLife(id, timeline) / putLifeAndEvents(life, events) / listEvents(id, timeline, since)
+                                       動態生活狀態與生活事件（依角色＋故事時間線分開）
    getSummary(id) / putSummary(id, s)  歷史摘要（預留給 AI，現在不寫入）
    listMemories(id) / putMemory(id, m) 長期記憶（預留給 AI，現在不寫入）
 
@@ -393,13 +401,14 @@ function personaOf(id,mode){
    每位 NPC 的訊息以 [contactId, seq] 為主鍵，各自占一段獨立的鍵範圍；
    清除、分頁、匯出都只作用在該 NPC 的範圍內。不設數量上限，也不會自動刪除。
    ============================================================ */
-const DB_NAME="nightline-holo",DB_VER=1;
+const DB_NAME="nightline-holo",DB_VER=2;
 const reqP=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const txDone=t=>new Promise((res,rej)=>{t.oncomplete=()=>res();t.onerror=()=>rej(t.error||new Error("寫入失敗"));
   t.onabort=()=>rej(t.error||new DOMException("寫入已中止","AbortError"))});
 const krange=id=>IDBKeyRange.bound([id],[id,[]]);            /* [id, 任何值] 的完整範圍 */
 const msgKey=m=>m.from+"\u0001"+m.t+"\u0001"+m.text;          /* 判斷重複：同發話者、同時間、同內容 */
-const cleanMsg=m=>({from:m.from,text:m.text,t:m.t});
+const MSG_EXTRA=["src","trigger","phase","genAt","eventAt"];   /* 主動訊息：來源、觸發事件、產生階段、實際產生時間、虛構事件時間 */
+const cleanMsg=m=>{const o={from:m.from,text:m.text,t:m.t};for(const k of MSG_EXTRA)if(m[k]!=null)o[k]=m[k];return o};
 function sortChrono(list){return list.map((m,i)=>[m,i]).sort((a,b)=>a[0].t-b[0].t||a[1]-b[1]).map(x=>x[0])}
 
 function IndexedDBStore(){
@@ -417,7 +426,10 @@ function IndexedDBStore(){
           if(!has("settings"))d.createObjectStore("settings",{keyPath:"id"});
           if(!has("meta"))d.createObjectStore("meta",{keyPath:"key"});
           if(!has("summaries"))d.createObjectStore("summaries",{keyPath:"contactId"});
-          if(!has("memories"))d.createObjectStore("memories",{keyPath:["contactId","id"]})};
+          if(!has("memories"))d.createObjectStore("memories",{keyPath:["contactId","id"]});
+          /* v2：動態生活情境，依 [角色, 故事時間線] 分開 */
+          if(!has("life"))d.createObjectStore("life",{keyPath:["contactId","timeline"]});
+          if(!has("events"))d.createObjectStore("events",{keyPath:["contactId","timeline","id"]})};
         r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
         r.onblocked=()=>rej(new Error("資料庫正被其他分頁使用，請關閉其他 NIGHTLINE 分頁後重新整理"))});
       db.onversionchange=()=>{db.close();this.onlost&&this.onlost(new Error("資料庫已在其他分頁更新，請重新整理"))};
@@ -458,6 +470,11 @@ function IndexedDBStore(){
       const t=T("messages","readwrite"),st=t.objectStore("messages");
       for(const p of patches){const m=await reqP(st.get([id,p.seq]));if(m)st.put({...m,text:p.text})}
       await txDone(t)},
+    async getLife(id,tl){return (await reqP(T("life").objectStore("life").get([id,tl])))||null},
+    async putLifeAndEvents(life,events){const t=T(["life","events"],"readwrite");t.objectStore("life").put(life);
+      const es=t.objectStore("events");events.forEach(e=>es.put(e));await txDone(t)},
+    async listEvents(id,tl,since=0){const all=await reqP(T("events").objectStore("events").getAll(IDBKeyRange.bound([id,tl],[id,tl,[]])));
+      return all.filter(e=>(e.endedAt??e.plannedEnd??e.startedAt)>=since||e.status==="pending"||e.status==="in_progress")},
     async getSummary(id){return (await reqP(T("summaries").objectStore("summaries").get(id)))||null},
     async putSummary(id,s){const t=T("summaries","readwrite");t.objectStore("summaries").put({...s,contactId:id});await txDone(t)},
     async listMemories(id){return reqP(T("memories").objectStore("memories").getAll(krange(id)))},
@@ -483,6 +500,10 @@ function MemoryStore(){
       const all=sortChrono([...a.map(cleanMsg),...fresh]);msgs.set(p.id,all.map((m,i)=>({contactId:p.id,seq:i+1,...m})));
       if(p.settings)settings.set(p.id,{...p.settings});return {id:p.id,added:fresh.length,skipped,total:all.length}})},
     async patchMessages(id,patches){for(const p of patches){const m=L(id).find(x=>x.seq===p.seq);if(m)m.text=p.text}},
+    async getLife(id,tl){const v=meta.get("life:"+id+"|"+tl);return v?JSON.parse(JSON.stringify(v)):null},
+    async putLifeAndEvents(life,events){meta.set("life:"+life.contactId+"|"+life.timeline,JSON.parse(JSON.stringify(life)));
+      const k="events:"+life.contactId+"|"+life.timeline,a=meta.get(k)||[];for(const e of events){const i=a.findIndex(x=>x.id===e.id);if(i>=0)a[i]=e;else a.push(e)}meta.set(k,a)},
+    async listEvents(id,tl,since=0){return (meta.get("events:"+id+"|"+tl)||[]).filter(e=>(e.endedAt??e.plannedEnd??e.startedAt)>=since||e.status==="pending"||e.status==="in_progress").map(e=>({...e}))},
     async getSummary(id){return sums.get(id)||null},async putSummary(id,s){sums.set(id,{...s,contactId:id})},
     async listMemories(id){return (mems.get(id)||[]).slice()},async putMemory(id,m){if(!mems.has(id))mems.set(id,[]);mems.get(id).push({...m,contactId:id})},
   };
@@ -539,18 +560,299 @@ async function applySeedUpdates(store){
 }
 
 /* ============================================================
-   4. AI Context（與完整聊天紀錄分開）
+   4. 即時時間與動態生活情境（Dynamic Context Engine）
+   - 時間：使用裝置當地時間與時區（24 小時制）；故事年份與原作時間線另外管理，
+     不因現實時間推進原作劇情。
+   - 生活規則：characters/<id>/ 下的 daily-routine / location-rules / activity-rules /
+     state-transitions / proactive-message-rules（本專案的虛構延伸，非官方設定）。
+   - 狀態與事件存在 IndexedDB 的 life / events，依 [角色, 故事時間線] 分開；
+     重新整理或關閉網站後沿用，不會每次重新產生一套生活。
+   - 推進全部由程式規則處理，不呼叫 AI；網站關閉期間不補算每一分鐘，
+     間隔太久就依目前時段重新對齊（resync）。
+   - 醉酒、宿醉只能由事件觸發（先有喝酒計畫 → 喝酒 → 睡醒後才可能宿醉）。
+   ============================================================ */
+const LIFE_CHARS=["judy"];
+const clock={offset:0,now(){return Date.now()+this.offset}};
+try{const o=Number(sessionStorage.getItem("nightline.clockOffset"));if(o)clock.offset=o}catch(e){}
+const tzName=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC"}catch(e){return"UTC"}};
+const P2=n=>String(n).padStart(2,"0");
+const dateKeyL=t=>{const d=new Date(t);return d.getFullYear()+"-"+P2(d.getMonth()+1)+"-"+P2(d.getDate())};
+const hhmm=t=>{const d=new Date(t);return P2(d.getHours())+":"+P2(d.getMinutes())};
+const hourOf=t=>{const d=new Date(t);return d.getHours()+d.getMinutes()/60};
+const WDAY=["sun","mon","tue","wed","thu","fri","sat"],WDAY_EN=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+function isoWeek(t){const d=new Date(t),x=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),day=x.getUTCDay()||7;
+  x.setUTCDate(x.getUTCDate()+4-day);const y=new Date(Date.UTC(x.getUTCFullYear(),0,1));return x.getUTCFullYear()+"-W"+Math.ceil(((x-y)/864e5+1)/7)}
+const H=36e5,MIN=6e4;
+const rnd=(a,b)=>a+R()*(b-a);
+function pickW(w){const e=Object.entries(w).filter(([,v])=>v>0);const tot=e.reduce((a,[,v])=>a+v,0);if(!tot)return null;
+  let r=R()*tot;for(const [k,v] of e){if((r-=v)<=0)return k}return e[e.length-1][0]}
+
+const LIFE={},lifeStatus={},lifeCache={};
+async function loadLifeRules(id){
+  const names=["daily-routine","location-rules","activity-rules","state-transitions","proactive-message-rules"];
+  try{
+    const arr=await Promise.all(names.map(n=>fetch(`characters/${id}/${n}.json`,{cache:"no-cache"}).then(r=>{if(!r.ok)throw new Error(`${n}.json 讀取失敗（HTTP ${r.status}）`);return r.json()})));
+    LIFE[id]={routine:arr[0],loc:arr[1],act:arr[2],trans:arr[3],pro:arr[4]};lifeStatus[id]="ok";
+  }catch(e){lifeStatus[id]="停用（"+why(e)+"）";console.warn(`[NIGHTLINE] ${id} 的生活規則無法載入，改為沒有生活情境的模式`,e)}
+}
+const lifeKey=id=>id+"|"+set[id].timeline;
+
+function bandWeight(rules,id,at){
+  let h=hourOf(at);if(h<2)h+=24;
+  const b=rules.routine.bands.find(b=>h>=b.from&&h<b.to);return b&&b.weights[id]!=null?b.weights[id]:1}
+function allowedHere(rules,tl,actId){
+  const a=rules.act.activities[actId];if(!a)return false;
+  if(a.timelines&&!a.timelines.includes(tl))return false;
+  const locs=(rules.loc.timelines[tl]||{}).locations||[];
+  return locs.includes(a.location)&&(!a.to||locs.includes(a.to));
+}
+const locLabel=(rules,tl,loc)=>((rules.loc.timelines[tl]||{}).labels||{})[loc]||(rules.loc.locations[loc]||{}).label||loc;
+
+function newEvent(L,ev){L.seq=(L.seq||0)+1;const e={contactId:L.contactId,timeline:L.timeline,id:"e"+String(L.seq).padStart(6,"0"),
+  mentionedToV:false,followUp:false,generatedAt:Date.now(),...ev};L._dirty.push(e);return e}
+function touchEvent(L,e){if(!L._dirty.includes(e))L._dirty.push(e)}
+function evById(L,id){return L._events.find(e=>e.id===id)||L._dirty.find(e=>e.id===id)}
+function setMood(L,rules,key,at){const m=rules.trans.mood.on_event[key];if(!m)return;L.mood={key:m[0],since:at,until:at+m[1]*H,cause:key}}
+
+function startActivity(L,rules,actId,at,opts={}){
+  const a=rules.act.activities[actId],dur=rnd(a.duration[0],a.duration[1])*MIN,startedAt=opts.startedAt??at;
+  const ev=newEvent(L,{kind:"activity",activity:actId,name:a.label,location:a.location,to:a.to||null,people:a.people||[],
+    startedAt,plannedEnd:startedAt+dur,endedAt:null,status:"in_progress",note:opts.note||null});
+  L.activity={id:actId,eventId:ev.id,startedAt,endsAt:startedAt+dur,location:a.location,midSent:false};
+  L.location=a.location;
+  if(actId==="sleep")L.sleepStart=startedAt;
+  if(a.sets_physical==="intoxicated"){L.physical={key:"intoxicated",since:startedAt};L.drankSinceSleep=true;
+    const plan=L.plans.find(p=>p.status==="pending"&&p.kind==="drinks");if(plan){plan.status="done";const pe=evById(L,plan.eventId);if(pe){pe.status="completed";pe.endedAt=startedAt;touchEvent(L,pe)}}}
+  return ev;
+}
+function endActivity(L,rules,at,triggers){
+  const cur=L.activity,a=rules.act.activities[cur.id],ev=evById(L,cur.eventId);
+  if(ev){ev.status="completed";ev.endedAt=at;touchEvent(L,ev)}
+  if(a.to)L.location=a.to;                      /* 移動結束：抵達目的地 */
+  if(a.outcomes&&a.work){
+    const O=rules.act.edit_outcomes,key=pickW({progress:O.progress.p,setback:O.setback.p,breakthrough:O.breakthrough.p}),o=O[key];
+    const p=L.projects[a.work]||(L.projects[a.work]={id:"p"+at,label:rules.act.projects[a.work].label,progress:0,startedAt:at});
+    p.progress=Math.min(1,p.progress+rnd(o.gain[0],o.gain[1]));
+    if(ev){ev.outcome=key;ev.progress=Math.round(p.progress*100)/100}
+    if(o.mood)setMood(L,rules,key,at);
+    if(key==="breakthrough")triggers.push({trigger:"breakthrough",at,eventId:ev&&ev.id});
+    if(p.progress>=1){
+      const done=newEvent(L,{kind:"project_completed",name:"完成"+p.label,location:a.location,startedAt:p.startedAt,plannedEnd:at,endedAt:at,status:"completed",project:p.id,followUp:true});
+      setMood(L,rules,"project_completed",at);triggers.push({trigger:"project_completed",at,eventId:done.id});
+      L.completedProjects=(L.completedProjects||0)+1;delete L.projects[a.work];
+    }
+    if(cur.id==="lizzie_bd_editing"&&at-cur.startedAt>4*H)setMood(L,rules,"long_work_end",at);
+  }
+  if(cur.id==="meet_friends"){setMood(L,rules,"meet_friends_end",at);triggers.push({trigger:"meet_friends_end",at,eventId:ev&&ev.id})}
+  if(cur.id==="call_grandma")triggers.push({trigger:"call_grandma_end",at,eventId:ev&&ev.id});
+  if(cur.id==="sleep"){
+    const T=rules.trans.physical;
+    if(L.drankSinceSleep&&R()<T.hungover.probability){
+      L.physical={key:"hungover",since:at,until:at+rnd(T.hungover.recover_after_awake_hours[0],T.hungover.recover_after_awake_hours[1])*H};
+      newEvent(L,{kind:"physical",name:"宿醉",startedAt:at,plannedEnd:L.physical.until,endedAt:null,status:"in_progress",location:"apartment"});
+      setMood(L,rules,"hangover",at);
+    }else L.physical={key:"sober",since:at};
+    L.drankSinceSleep=false;
+    if(at-(L.sleepStart||at)<6*H||hourOf(L.sleepStart||at)>=3&&hourOf(L.sleepStart||at)<8)setMood(L,rules,"wake_after_late_night",at);
+    L.awakeSince=at;triggers.push({trigger:"woke_up",at,eventId:ev&&ev.id});
+  }
+  /* 喝酒計畫：只在指定時段、每天最多一次，由機率產生計畫事件，之後才會真的去喝 */
+  const D=rules.trans.physical.drink_plan,h=hourOf(at),today=dateKeyL(at);
+  if(a.awake!==false&&h>=D.create_window_hours[0]&&h<D.create_window_hours[1]&&L.physical.key==="sober"&&L.lastPlanDay!==today){
+    const pr=D.probability[WDAY[new Date(at).getDay()]]??D.probability.default;
+    L.lastPlanDay=today;
+    if(R()<pr){const d=new Date(at);d.setHours(Math.floor(rnd(D.start_hour_range[0],D.start_hour_range[1])),Math.floor(rnd(0,59)),0,0);
+      if(d.getTime()>at+30*MIN){const pe=newEvent(L,{kind:"plan",name:"晚點跟朋友出去喝一杯",startedAt:d.getTime(),plannedEnd:d.getTime()+3*H,endedAt:null,status:"pending",people:["朋友"],location:"city"});
+        L.plans.push({id:pe.id,kind:"drinks",at:d.getTime(),eventId:pe.id,status:"pending"})}}
+  }
+}
+function chooseNext(L,rules,at){
+  const tl=L.timeline,cur=rules.act.activities[L.activity.id];
+  const plan=L.plans.find(p=>p.status==="pending"&&p.kind==="drinks");
+  if(plan){
+    if(at>plan.at+2*H){plan.status="cancelled";const pe=evById(L,plan.eventId);if(pe){pe.status="cancelled";pe.endedAt=at;touchEvent(L,pe)}}
+    else if(at>=plan.at-45*MIN&&L.activity.id!=="sleep"){
+      if(L.location==="city")return "drinking_with_friends";
+      if(allowedHere(rules,tl,"go_out"))return "go_out";
+    }
+  }
+  const w={};
+  for(const [id,base] of Object.entries(cur.next)){
+    if(!allowedHere(rules,tl,id))continue;const a=rules.act.activities[id];
+    if(a.requires_plan)continue;
+    let v=base*bandWeight(rules,id,at);
+    if(id==="sleep"&&L.awakeSince&&at-L.awakeSince>rules.routine.sleep_pressure.awake_hours*H)v*=rules.routine.sleep_pressure.multiplier;
+    w[id]=v;
+  }
+  return pickW(w)||Object.keys(cur.next).find(id=>allowedHere(rules,tl,id))||"rest_home";
+}
+function resync(L,rules,now,reason){
+  const by=rules.routine.resync.by_band;let h=hourOf(now);if(h<2)h+=24;
+  const key=Object.keys(by).find(k=>{const [a,b]=k.split("-").map(Number);return h>=a&&h<b});
+  const w={};for(const [id,v] of Object.entries(by[key]||{}))if(allowedHere(rules,L.timeline,id))w[id]=v;
+  const id=pickW(w)||"rest_home",a=rules.act.activities[id];
+  for(const p of L.plans)if(p.status==="pending"&&p.at<now){p.status="cancelled";const pe=evById(L,p.eventId);if(pe){pe.status="cancelled";pe.endedAt=now;touchEvent(L,pe)}}
+  L.physical={key:"sober",since:now};L.drankSinceSleep=false;L.mood={key:"neutral",since:now,until:null,cause:null};
+  if(id==="sleep"){L.sleepStart=now-rnd(1,3)*H}else{L.awakeSince=now-rnd(1,4)*H}
+  const startedAt=now-rnd(.1,.6)*a.duration[0]*MIN;
+  startActivity(L,rules,id,now,{startedAt,note:reason});
+}
+function freshLife(id,tl,now){
+  return {contactId:id,timeline:tl,tz:tzName(),createdAt:now,updatedAt:now,lastInteraction:null,activity:null,location:null,
+    mood:{key:"neutral",since:now,until:null,cause:null},physical:{key:"sober",since:now},drankSinceSleep:false,awakeSince:null,sleepStart:null,
+    projects:{},plans:[],seq:0,proactive:{lastAt:0,day:null,count:0,log:[]},lastPlanDay:null};
+}
+/* 依實際經過時間推進；回傳期間發生、可能觸發主動訊息的事件 */
+async function advanceLife(id,phase){
+  const rules=LIFE[id];if(!rules||!store)return [];
+  const now=clock.now(),tl=set[id].timeline,k=lifeKey(id);
+  let L=lifeCache[k];
+  if(!L){L=await store.getLife(id,tl);if(!L)L=freshLife(id,tl,now);L._events=await store.listEvents(id,tl,now-3*24*H);lifeCache[k]=L}
+  L._dirty=[];const triggers=[];
+  if(L.tz!==tzName()){newEvent(L,{kind:"system",name:`時區變更：${L.tz} → ${tzName()}`,startedAt:now,plannedEnd:now,endedAt:now,status:"completed"});L.tz=tzName()}
+  if(!L.activity)resync(L,rules,now,"初次建立生活狀態");
+  else if(now<L.updatedAt-MIN){const ev=evById(L,L.activity.eventId);if(ev){ev.status="cancelled";ev.endedAt=now;touchEvent(L,ev)}resync(L,rules,now,"時間倒退，重新對齊")}
+  else if(now-L.activity.endsAt>rules.routine.resync.resync_after_hours*H){
+    const ev=evById(L,L.activity.eventId);if(ev){ev.status="completed";ev.endedAt=L.activity.endsAt;touchEvent(L,ev)}
+    resync(L,rules,now,`距離上次推進 ${Math.round((now-L.updatedAt)/H)} 小時，依目前時段重新對齊`);
+  }else{
+    /* 有約時：時間快到就提早結束手上的事去赴約（移動、睡覺、喝酒中除外） */
+    const boundary=()=>{const plan=L.plans.find(p=>p.status==="pending");const a=rules.act.activities[L.activity.id];
+      if(plan&&a.location!=="transit"&&a.awake!==false&&!a.requires_plan){const cut=plan.at-30*MIN;if(cut>L.activity.startedAt&&cut<L.activity.endsAt)return {at:cut,early:true}}
+      return {at:L.activity.endsAt,early:false}};
+    let guard=0,bd;
+    while((bd=boundary()).at<=now&&guard++<300){
+      const at=bd.at;
+      if(bd.early){const ev=evById(L,L.activity.eventId);if(ev){ev.note="為了赴約提早結束";touchEvent(L,ev)}L.activity.endsAt=at}
+      endActivity(L,rules,at,triggers);
+      const next=chooseNext(L,rules,at);startActivity(L,rules,next,at);
+    }
+  }
+  if(L.activity.id==="drinking_with_friends"&&!L.activity.midSent&&now>=L.activity.startedAt+60*MIN){L.activity.midSent=true;triggers.push({trigger:"drinking_midway",at:L.activity.startedAt+60*MIN,eventId:L.activity.eventId})}
+  if(L.physical.key==="hungover"&&L.physical.until&&now>=L.physical.until){
+    const pe=[...L._events,...L._dirty].reverse().find(e=>e.kind==="physical"&&e.status==="in_progress");if(pe){pe.status="completed";pe.endedAt=L.physical.until;touchEvent(L,pe)}
+    L.physical={key:"sober",since:L.physical.until}}
+  if(L.mood.until&&now>=L.mood.until)L.mood={key:"neutral",since:L.mood.until,until:null,cause:null};
+  L.updatedAt=now;
+  await saveLife(L);
+  return triggers.map(t=>({...t,phase}));
+}
+async function saveLife(L){
+  const dirty=L._dirty.slice(),snap={...L};delete snap._dirty;delete snap._events;
+  for(const e of dirty){const i=L._events.findIndex(x=>x.id===e.id);if(i>=0)L._events[i]=e;else L._events.push(e)}
+  L._dirty=[];
+  try{await store.putLifeAndEvents(snap,dirty)}
+  catch(e){fail("life:"+L.contactId,`${C[L.contactId].short}的生活狀態沒有存進本機`,e,()=>store.putLifeAndEvents(snap,dirty))}
+}
+/* V 在茱蒂睡覺時傳訊息：中斷睡眠（不讓使用者配合 NPC 作息） */
+async function lifeOnUserMessage(id){
+  const rules=LIFE[id];if(!rules)return;await advanceLife(id,"while_open");
+  const L=lifeCache[lifeKey(id)];if(!L)return;const now=clock.now();
+  L._dirty=[];
+  L.prevInteraction=L.lastInteraction;L.lastInteraction=now;   /* 回覆當下用「這則之前」的那次互動計算間隔 */
+  if(L.activity.id==="sleep"){
+    const ev=evById(L,L.activity.eventId);if(ev){ev.status="completed";ev.endedAt=now;ev.note="被 V 的訊息吵醒";touchEvent(L,ev)}
+    startActivity(L,rules,"woken_by_message",now);
+  }
+  await saveLife(L);
+}
+
+/* ---- 主動訊息：冷卻、每日上限、開關、關係限制；生成時間如實記錄 ---- */
+async function handleTriggers(id,triggers){
+  const rules=LIFE[id];if(!rules||!triggers.length)return;
+  const L=lifeCache[lifeKey(id)],R0=rules.pro,now=clock.now(),rel=set[id].mode==="lover"?"lover":"friend";
+  const log=(t,result)=>{L.proactive.log.unshift({at:now,trigger:t.trigger,eventAt:t.at,phase:t.phase,result});L.proactive.log=L.proactive.log.slice(0,30)};
+  /* 網站重新開啟時，只考慮最新的一個觸發；其餘記錄為略過 */
+  let list=triggers;if(triggers[0].phase==="on_open"&&triggers.length>1){list=[triggers[triggers.length-1]];triggers.slice(0,-1).forEach(t=>log(t,"略過：網站關閉期間發生，只處理最新一個"))}
+  L._dirty=[];
+  for(const t of list){
+    const rule=R0.triggers[t.trigger];
+    if(!rule){log(t,"略過：沒有對應規則");continue}
+    if(set[id].proactive===false){log(t,"略過：使用者關閉主動訊息");continue}
+    if(!rule.relationships.includes(rel)){log(t,`略過：目前關係（${rel}）不適用`);continue}
+    if(rule.min_hours_since_interaction&&L.lastInteraction&&now-L.lastInteraction<rule.min_hours_since_interaction*H){log(t,"略過：剛聊過不久");continue}
+    if(L.lastInteraction&&now-L.lastInteraction<R0.skip_if_v_active_within_minutes*MIN){log(t,"略過：V 正在聊天中");continue}
+    if(now-L.proactive.lastAt<R0.cooldown_hours*H){log(t,"略過：冷卻時間內");continue}
+    const today=dateKeyL(now);if(L.proactive.day!==today){L.proactive.day=today;L.proactive.count=0}
+    if(L.proactive.count>=R0.max_per_day){log(t,"略過：今天已達上限");continue}
+    if(t.phase==="on_open"&&now-t.at>12*H){log(t,"略過：事件太久以前");continue}
+    if(R()>rule.probability){log(t,"略過：這次沒有觸發（機率）");continue}
+    if(!replyProvider.proactive){log(t,"略過：目前的回覆來源不支援主動訊息");continue}
+    let msgs;
+    try{const context=await buildContext(id,"");msgs=await replyProvider.proactive({contactId:id,trigger:t.trigger,context})}
+    catch(e){log(t,"略過：產生失敗（"+why(e)+"）");continue}
+    msgs=(Array.isArray(msgs)?msgs:[]).map(String).filter(m=>m.trim());
+    if(!msgs.length){log(t,"略過：回覆來源沒有內容");continue}
+    L.proactive.lastAt=now;L.proactive.count++;log(t,"已傳送 "+msgs.length+" 則");
+    const ev=t.eventId&&evById(L,t.eventId);if(ev){ev.mentionedToV=true;touchEvent(L,ev)}
+    await saveLife(L);
+    for(let i=0;i<msgs.length;i++){if(i&&t.phase!=="on_open")await sleep(700);await deliver(id,msgs[i],"n",{src:"proactive",trigger:t.trigger,phase:t.phase,genAt:Date.now(),eventAt:t.at})}
+    return;
+  }
+  await saveLife(L);
+}
+async function tickLife(phase="while_open"){
+  for(const id of LIFE_CHARS){if(!LIFE[id])continue;
+    try{const tr=await advanceLife(id,phase);await handleTriggers(id,tr)}catch(e){console.error("[NIGHTLINE] 生活情境推進失敗",e)}}
+  if(location.hash==="#debug")renderDebug();
+}
+
+/* ---- 給 AI 的即時動態資料（只放內部情境，不直接顯示給使用者） ---- */
+function dynamicContext(id){
+  const now=clock.now(),s=set[id],L=LIFE[id]&&lifeCache[lifeKey(id)];
+  const lastI=L?(now-(L.lastInteraction||0)<2*MIN?L.prevInteraction:L.lastInteraction)||null:null,d=new Date(now);
+  const base={character_id:id,clock_mode:clock.offset?"simulated":"real_time",timezone:tzName(),current_date:dateKeyL(now),current_time:hhmm(now),
+    day_of_week:WDAY_EN[d.getDay()],story_timeline:s.timeline,relationship:s.mode==="lover"?"romantic":"friend",
+    last_interaction:lastI?new Date(lastI).toISOString():null,minutes_since_last_interaction:lastI?Math.round((now-lastI)/MIN):null,
+    crossed_day:lastI?dateKeyL(lastI)!==dateKeyL(now):null,crossed_week:lastI?isoWeek(lastI)!==isoWeek(now):null};
+  if(!L)return {...base,life:"not_available",life_status:lifeStatus[id]||"此角色尚未設定生活規則"};
+  const rules=LIFE[id],a=rules.act.activities[L.activity.id],today=dateKeyL(now);
+  const evs=[...L._events].filter(e=>e.kind!=="system");
+  return {...base,
+    current_location:L.location,current_location_label:locLabel(rules,L.timeline,L.location),
+    current_activity:L.activity.id,current_activity_label:a.label,
+    activity_started_at:hhmm(L.activity.startedAt),estimated_activity_end:hhmm(L.activity.endsAt),
+    work_state:a.work?"working":a.awake===false?"asleep":"off",
+    current_mood:L.mood.key,physical_state:L.physical.key,
+    fatigue:L.awakeSince?Math.min(1,Math.round((now-L.awakeSince)/H/rules.trans.fatigue.full_at_awake_hours*100)/100):0,
+    daily_events:evs.filter(e=>e.kind!=="plan"&&dateKeyL(e.startedAt)===today&&e.startedAt<=now).map(e=>({event:e.name,status:e.status,mentioned_to_v:e.mentionedToV})),
+    upcoming_plans:[...evs.filter(e=>e.kind==="plan"&&e.status==="pending").map(e=>`${e.name}（約 ${hhmm(e.startedAt)}）`),
+      ...(a.work?[`完成目前的${a.label}`]:[])],
+    unfinished_work:Object.values(L.projects).map(p=>({work:p.label,progress:Math.round(p.progress*100)+"%"})),
+    recent_completed:evs.filter(e=>e.kind==="project_completed").slice(-3).map(e=>({event:e.name,at:dateKeyL(e.endedAt)+" "+hhmm(e.endedAt),mentioned_to_v:e.mentionedToV})),
+    unresolved_topics:[],
+    note:"生活情境為本專案虛構延伸；優先回應 V 實際傳送的內容，不必每則都提到自己正在做什麼"};
+}
+
+/* ============================================================
+   4b. AI Context（與完整聊天紀錄分開）
    完整紀錄全部留在儲存層；送給 AI 的只有下面組出來的 context：
      persona   角色人格（固定資料）
      recent    近期對話（最新 AI_CONTEXT.recent 則）
+     dynamic   即時動態資料：時間、時區、經過時間、地點、活動、情緒、暫時狀態、今日事件、計畫
+     canon_refs 與話題相關的原作語料 id（原文只存在後端私人檔）
      summary   歷史摘要（之後由真實 AI 產生後寫入；目前為 null）
      memories  長期記憶（之後由真實 AI 擷取後寫入；目前為 []）
    未串接真實 AI 前，不產生、不寫入任何摘要或記憶。
    ============================================================ */
 const AI_CONTEXT={recent:20};
-async function buildContext(id){
+/* 依話題與狀態挑選相關原作語料的 id（原文存在後端私人檔，前端只傳索引） */
+function relevantCanon(id,text,dyn){
+  if(id!=="judy")return [];const out=new Set();
+  if(dyn.physical_state==="intoxicated")out.add("judy_sms_drunk_001");
+  if(dyn.physical_state==="hungover")out.add("judy_sms_hangover_001");
+  if(/外婆|家人|奶奶/.test(text))["judy_sms_grandma_001","judy_sms_grandma_002"].forEach(x=>out.add(x));
+  if(/幻舞|情緒軌|雜訊|編輯|成品/.test(text))out.add("judy_sms_bd_editing_001");
+  if(/受傷|危險|委託|中槍|流血/.test(text))["judy_sms_checkin_001","judy_sms_gift_worry_001"].forEach(x=>out.add(x));
+  if(dyn.relationship==="romantic"&&/愛|想你|喜歡/.test(text))["judy_sms_confession_001","judy_sms_dog_joke_001"].forEach(x=>out.add(x));
+  if(!out.size)out.add(dyn.relationship==="romantic"?"judy_sms_dog_joke_001":"judy_sms_checkin_001");
+  return [...out];
+}
+async function buildContext(id,text=""){
   const [recent,summary,memories]=await Promise.all([store.latest(id,AI_CONTEXT.recent),store.getSummary(id),store.listMemories(id)]);
-  return {persona:personaOf(id,set[id].mode),
+  const dynamic=dynamicContext(id);
+  return {persona:personaOf(id,set[id].mode),dynamic,
+    canon_refs:relevantCanon(id,text,dynamic),
     recent:recent.filter(m=>m.from!=="sys").map(m=>({role:m.from==="v"?"user":"assistant",text:m.text,t:m.t})),
     summary,memories};
 }
@@ -566,12 +868,53 @@ const MockProvider={
   async reply({contactId,text,context}){
     await sleep(700+R()*900);                       /* 模擬網路與思考時間 */
     const mode=context.persona.relationship;
-    const {messages,k}=mockCompose(contactId,text,context.recent,mode);
+    const {messages,k}=mockCompose(contactId,text,context.recent,mode,context.dynamic);
     return {messages,choices:mockChoices(contactId,k,mode)};
+  },
+  /* 主動訊息（模擬模式：原創範本；接上真實 AI 後改由模型依 context 產生） */
+  async proactive({contactId,trigger,context}){
+    const ML=MOCK_LIFE[contactId];if(!ML)return [];let t=ML.proactive[trigger];if(!t)return [];
+    if(t==="intoxicated")t=ML.intoxicated;
+    if(!Array.isArray(t))t=t[context.persona.relationship]||t.friend||[];
+    return t.length?pickOne(t).slice():[];
   }
 };
+/* 模擬模式專用：依生活狀態回答近況（原創台詞，接上真實 AI 後不使用） */
+const MOCK_LIFE={
+  judy:{
+    status:{
+      sleep:[["……嗯？","剛被你吵醒","沒事，你說"]],woken_by_message:[["還有點睏……","你說"]],
+      wake_up:[["剛醒……","腦袋還沒開機"]],coffee_breakfast:[["在喝咖啡","等它發揮作用"]],
+      home_bd_editing:[["在家弄自己的幻舞","這段素材比我想的還難搞"],["在編輯一段私人作品","雜訊多到我想哭 -_-"]],
+      tidy_and_errands:[["在整理房間","東西多到我自己都看不下去"]],rest_home:[["在家耍廢","難得什麼都不想做"]],
+      call_grandma:[["在跟外婆講電話","等我一下"]],head_to_lizzie:[["在去莉茲的路上"]],
+      lizzie_setup:[["在莉茲弄設備","營業前要先把東西調好"]],
+      lizzie_bd_editing:[["在莉茲啊","手上這段的情緒軌一直分不乾淨 -_-"],["在莉茲地下室","今天進度還行"]],
+      lizzie_break:[["休息一下","等等繼續"]],head_home:[["剛收工","在回家的路上"]],
+      wind_down:[["剛到家","洗完澡就要躺平了"]],go_out:[["出門一下"]],
+      errands_city:[["在外面買東西","找一個零件找了快一小時"]],eat_out:[["在外面吃東西"]],
+      meet_friends:[["跟朋友在外面","晚點再跟你說"]]},
+    intoxicated:[["V～～～","你猜我在哪裡"],["這杯好好喝喔喔","我要再一杯嗎？？不准說不要"],["我沒有醉","只是有一點點……開心ㄉ"]],
+    hungover:[["呃……","頭還在痛"],["昨晚的事你就當沒看到 -_-"],["我需要水","還有安靜"]],
+    longGap:[["欸，好一陣子沒聊了","最近還好嗎？"],["嗨","好久沒你的消息了"]],
+    proactive:{
+      project_completed:{lover:[["弄完了！","那段終於收尾了，改天給你看 ;)"]],friend:[["跟你說一下，手上那段幻舞剛做完","超爽"]]},
+      breakthrough:[["我剛想到一個分開情緒軌的方法","比原本乾淨很多，忍不住想跟你說"]],
+      woke_up:[["剛醒","突然想到你，就傳了"]],
+      call_grandma_end:[["剛跟外婆講完電話","她今天心情不錯，連帶我也是"]],
+      meet_friends_end:[["剛跟朋友分開","好久沒笑成這樣了"]],
+      drinking_midway:"intoxicated"}}};
+const STATUS_RE=/在幹嘛|在做什麼|在忙什麼|在忙嗎|在哪|你人在|還醒著|醒了嗎|還沒睡|起床了沒|今天要去莉茲|在莉茲/;
+const pickOne=a=>a[Math.floor(R()*a.length)];
 /* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
-function mockCompose(id,text,recent,mode){
+function mockCompose(id,text,recent,mode,dyn){
+  const ML=MOCK_LIFE[id];
+  if(ML&&dyn&&dyn.life!=="not_available"){
+    if(dyn.physical_state==="intoxicated")return {messages:pickOne(ML.intoxicated).slice(),k:"drunk"};
+    if(dyn.physical_state==="hungover"&&R()<.6)return {messages:pickOne(ML.hungover).slice(),k:"hungover"};
+    if(STATUS_RE.test(text)&&ML.status[dyn.current_activity])return {messages:pickOne(ML.status[dyn.current_activity]).slice(),k:"status"};
+    if(/^\s*(嗨|哈囉|安安|在嗎|hi|hey)/i.test(text)&&dyn.minutes_since_last_interaction>3*24*60)return {messages:pickOne(ML.longGap).slice(),k:"greet"};
+  }
   const lv=C[id].lover&&mode==="lover"?C[id].lover.pool:null,p=lv?{...C[id].pool,...lv}:C[id].pool,lastNpc=[...recent].reverse().find(m=>m.role==="assistant");
   const rules=[
     ["bye",/晚安|睡了|掰|拜拜|先這樣|下次聊|先下線/],
@@ -635,7 +978,7 @@ const lastMsg={};      /* 聯絡人列表預覽用的最後一則 */
 const epoch={};        /* 重設時遞增，讓進行中的回覆作廢 */
 const typing={},pend={},scrollPos={},queue={};
 let newCount=0,sheetMode="contacts",ready=false;
-ORDER.forEach(id=>{set[id]={id,draft:"",unread:0,mode:defaultMode(id),choices:null,seeded:false};
+ORDER.forEach(id=>{set[id]={id,draft:"",unread:0,mode:defaultMode(id),choices:null,seeded:false,timeline:"working_at_lizzie",proactive:true};
   win[id]={msgs:[],hasMore:false,loading:false,loaded:false};lastMsg[id]=null;epoch[id]=0});
 const relOf=id=>personaOf(id,set[id].mode).rel;
 
@@ -746,13 +1089,14 @@ function renderSheet(){
     const c=C[app.active];
     b.innerHTML=`<div class="pf">${cardHTML(app.active)}<h2>${esc(c.name)}</h2><div class="enn en">${esc(c.en)} · ${esc(c.code)}</div>
       <dl><dt>身分</dt><dd>${esc(c.role)}</dd><dt>所在</dt><dd>${esc(c.base)}</dd><dt>與 V</dt><dd>${c.lover?`<div class="seg" role="group" aria-label="與 V 的關係">${[["friend","朋友"],["lover","戀人"]].map(([v,l])=>`<button data-mode="${v}" aria-pressed="${set[app.active].mode===v}">${l}</button>`).join("")}</div>`:""}${esc(relOf(app.active))}</dd></dl>
-      <h3>基本設定</h3><dl>${c.t.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join("")}<dt>模式</dt><dd>模擬回覆（Mock Mode），未連接 AI</dd></dl>
+      <h3>基本設定</h3><dl>${c.t.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join("")}${LIFE[app.active]?`<dt>主動訊息</dt><dd><div class="seg" role="group" aria-label="主動訊息">${[[true,"開"],[false,"關"]].map(([v,l])=>`<button data-pro="${v}" aria-pressed="${set[app.active].proactive!==false===v}">${l}</button>`).join("")}</div></dd>`:""}<dt>模式</dt><dd>模擬回覆（Mock Mode），未連接 AI</dd></dl>
       <div class="act"><button class="btn" id="pfR">重設這段對話</button></div>
       <h3>聊天紀錄</h3><p class="note2">紀錄存在這台裝置的瀏覽器資料庫（${esc(store?store.kind:"")}），不限數量、不會自動刪除。</p>
       <div class="act"><button class="btn" id="pfE">匯出全部紀錄</button><button class="btn" id="pfI">匯入紀錄</button></div>
       <p class="fan">NIGHTLINE // HOLO 為非官方粉絲作品，與 CD PROJEKT RED 無關。角色名稱權利屬原權利人，對話內容皆為原創模擬文字。</p></div>`;
     $("pfR").onclick=askReset;$("pfE").onclick=exportAll;$("pfI").onclick=()=>$("imp").click();
-    b.querySelectorAll(".seg button").forEach(x=>x.onclick=()=>{set[app.active].mode=x.dataset.mode;saveSettings(app.active);renderSheet()});
+    b.querySelectorAll(".seg button[data-mode]").forEach(x=>x.onclick=()=>{set[app.active].mode=x.dataset.mode;saveSettings(app.active);renderSheet()});
+    b.querySelectorAll(".seg button[data-pro]").forEach(x=>x.onclick=()=>{set[app.active].proactive=x.dataset.pro==="true";saveSettings(app.active);renderSheet()});
   }
 }
 
@@ -791,10 +1135,10 @@ async function loadOlder(){
 /* ---- 聊天流程（與回覆來源、儲存方式無關） ---- */
 function addLocal(id,m){if(win[id].loaded)win[id].msgs.push(m);lastMsg[id]=m}
 function setTyping(id,v){typing[id]=v;renderHead();if(id===app.active)refresh(false);if(sheet.classList.contains("open"))renderSheet()}
-function deliver(id,text,from="n"){
-  const m={from,text,t:Date.now()};addLocal(id,m);persistMsg(id,m);
+function deliver(id,text,from="n",extra){
+  const m={from,text,t:clock.now(),...(extra||{})};addLocal(id,m);const saved=persistMsg(id,m);
   if(id!==app.active&&from==="n"){set[id].unread++;saveSettings(id)}
-  if(id===app.active)refresh(from==="n");else renderHead();if(sheet.classList.contains("open"))renderSheet()}
+  if(id===app.active)refresh(from==="n");else renderHead();if(sheet.classList.contains("open"))renderSheet();return saved}
 /* 每個聊天室各自排隊，回覆一定回到發問的聊天室 */
 function requestReply(id,text){
   pend[id]=(pend[id]||0)+1;const ep=epoch[id];
@@ -803,9 +1147,10 @@ function requestReply(id,text){
 }
 async function runReply(id,text,ep){
   await sleep(350);if(epoch[id]!==ep)return;
+  await lifePending[id];
   setTyping(id,true);
   let out;
-  try{const context=await buildContext(id);out=await replyProvider.reply({contactId:id,text,context})}
+  try{const context=await buildContext(id,text);out=await replyProvider.reply({contactId:id,text,context})}
   catch(e){if(epoch[id]!==ep)return;typing[id]=false;deliver(id,"訊號中斷，這則訊息沒有收到回覆。","sys");return}
   if(epoch[id]!==ep)return;
   let msgs=out,choices=null;
@@ -832,8 +1177,10 @@ box.addEventListener("submit",e=>{e.preventDefault();send();ta.focus()});
 function send(){if(!ready)return;const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
   set[app.active].draft="";ta.value="";size();sendText(text)}
 function sendText(text){const id=app.active;set[id].choices=null;saveSettings(id);
-  const m={from:"v",text,t:Date.now()};addLocal(id,m);persistMsg(id,m);
+  const m={from:"v",text,t:clock.now()};addLocal(id,m);persistMsg(id,m);
+  lifePending[id]=lifeOnUserMessage(id).catch(e=>console.error(e));
   renderLog();toBottom();requestReply(id,text)}
+const lifePending={};
 log.addEventListener("click",e=>{const o=e.target.closest(".opt");if(!o)return;const c=set[app.active].choices;if(c&&c[o.dataset.i]!=null)sendText(c[o.dataset.i])});
 log.addEventListener("keydown",e=>{const o=e.target.closest(".opt");if(!o||!/^Arrow(Up|Down)$/.test(e.key))return;e.preventDefault();
   const all=[...log.querySelectorAll(".opt")],n=all.indexOf(o)+(e.key==="ArrowDown"?1:-1);(all[n]||o).focus()});
@@ -869,7 +1216,7 @@ async function resetContact(id){
   const fresh={id,draft:"",unread:0,mode:set[id].mode,choices:null,seeded:true};
   try{
     await store.clearContact(id,fresh);
-    const now=Date.now(),seeded=await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
+    const now=clock.now(),seeded=await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
     set[id]=fresh;win[id]={msgs:seeded,hasMore:false,loading:false,loaded:true};lastMsg[id]=seeded[seeded.length-1]||null;
     failures.splice(0,failures.length,...failures.filter(f=>!f.key.includes(":"+id)));renderSbar();
   }catch(e){fail("reset:"+id,`${C[id].short}的重設沒有完成`,e,()=>resetContact(id))}
@@ -939,6 +1286,30 @@ const vv=window.visualViewport;
 function fitVV(){if(!vv)return;document.documentElement.style.setProperty("--app-h",vv.height+"px");window.scrollTo(0,0)}
 if(vv){vv.addEventListener("resize",fitVV);fitVV()}
 
+/* ---- 開發者 Debug Panel：網址加上 #debug 才會出現；正式使用不顯示 ---- */
+function renderDebug(){
+  let d=$("dbg");if(!d){d=document.createElement("aside");d.id="dbg";d.setAttribute("aria-label","Debug Panel");document.body.appendChild(d);
+    d.addEventListener("click",async e=>{const b=e.target.closest("[data-dbg]");if(!b)return;const a=b.dataset.dbg;
+      if(a==="real")NIGHTLINE.setOffset(0);else if(a==="set"){const v=$("dbgT").value;if(v)NIGHTLINE.setOffset(new Date(v).getTime()-Date.now())}
+      else if(a==="tick"){}else NIGHTLINE.setOffset(clock.offset+Number(a)*H);
+      await tickLife("while_open");renderDebug()});
+    d.addEventListener("change",async e=>{if(e.target.id!=="dbgTl")return;const id="judy";set[id].timeline=e.target.value;await saveSettings(id);await tickLife("while_open");renderDebug()});}
+  const id="judy",L=lifeCache[lifeKey(id)],now=clock.now(),dyn=dynamicContext(id),r=LIFE[id];
+  const ev=L?[...L._events].filter(e=>e.kind!=="system"||true).slice(-14).reverse():[];
+  const row=(k,v)=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`;
+  const local=new Date(now-new Date(now).getTimezoneOffset()*MIN).toISOString().slice(0,16);
+  d.innerHTML=`<h2>Debug Panel <small>（開發者模式）</small></h2>
+  <section><h3>時鐘</h3><dl>${row("實際時間",new Date().toLocaleString("zh-TW",{hour12:false}))}${row("系統時間（引擎）",new Date(now).toLocaleString("zh-TW",{hour12:false}))}${row("模擬偏移",clock.offset?Math.round(clock.offset/MIN)+" 分鐘":"無")}${row("時區",tzName())}</dl>
+  <div class="dbtn"><button data-dbg="1">+1 小時</button><button data-dbg="6">+6 小時</button><button data-dbg="24">+1 天</button><button data-dbg="168">+7 天</button><button data-dbg="real">回到實際時間</button><button data-dbg="tick">立即推進</button></div>
+  <div class="dbtn"><input type="datetime-local" id="dbgT" value="${local}"><button data-dbg="set">設定模擬時間</button></div></section>
+  <section><h3>茱蒂</h3><dl>${row("生活規則",lifeStatus[id]||"未載入")}
+  <dt>故事時間線</dt><dd><select id="dbgTl">${r?Object.entries(r.loc.timelines).map(([k,v])=>`<option value="${k}"${set[id].timeline===k?" selected":""}>${esc(v.label)}</option>`).join(""):""}</select></dd>
+  ${L?row("所在地點",dyn.current_location_label)+row("目前活動",`${dyn.current_activity_label}（${dyn.activity_started_at} → 約 ${dyn.estimated_activity_end}）`)+row("情緒",dyn.current_mood)+row("暫時身體狀態",dyn.physical_state)+row("疲勞",dyn.fatigue)+row("上次互動",L.lastInteraction?new Date(L.lastInteraction).toLocaleString("zh-TW",{hour12:false}):"—")+row("主動訊息",set[id].proactive===false?"關閉":`開啟（今天 ${L.proactive.day===dateKeyL(now)?L.proactive.count:0} 則，上次 ${L.proactive.lastAt?hhmm(L.proactive.lastAt):"—"}）`):""}</dl></section>
+  ${L?`<section><h3>近期生活事件</h3><ol class="dbev">${ev.map(e=>`<li><b>${esc(e.status)}</b> ${esc(e.name)} <span>${hhmm(e.startedAt)}${e.endedAt?"–"+hhmm(e.endedAt):e.plannedEnd?" → "+hhmm(e.plannedEnd):""}${e.outcome?" · "+esc(e.outcome):""}${e.note?" · "+esc(e.note):""}</span></li>`).join("")}</ol></section>
+  <section><h3>主動訊息觸發紀錄</h3><ol class="dbev">${L.proactive.log.map(x=>`<li>${hhmm(x.at)} <b>${esc(x.trigger)}</b>（${esc(x.phase)}）<span>${esc(x.result)}</span></li>`).join("")||"<li>尚無</li>"}</ol></section>`:""}
+  <section><h3>送入 AI 的 Dynamic Context</h3><pre>${esc(JSON.stringify(dyn,null,2))}</pre></section>`;
+}
+
 /* ============================================================
    7. 啟動：開資料庫 → 遷移舊資料 → 讀設定 → 補初始對話 → 開聊天室
    ============================================================ */
@@ -955,20 +1326,29 @@ async function boot(){
     for(const id of ORDER){const s=await store.getSettings(id);if(s)set[id]={...set[id],...s,id}}
     for(const id of ORDER){
       if(!set[id].seeded){
-        if(await store.count(id)===0){const now=Date.now();await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
+        if(await store.count(id)===0){const now=clock.now();await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
         set[id].seeded=true;await store.putSettings({...set[id]});
       }
       const last=await store.latest(id,1);lastMsg[id]=last[0]||null;
     }
   }catch(e){fail("boot","初始資料讀取失敗",e,()=>location.reload())}
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}
+  await Promise.all(LIFE_CHARS.map(loadLifeRules));
+  await tickLife("on_open");
   await openRoom(app.active);
   ready=true;renderHead();renderLog();ta.value=set[app.active].draft||"";size();toBottom();
   if(fatalErr)renderSbar();
 }
-const readyP=boot();
+const readyP=boot().then(()=>{
+  setInterval(()=>tickLife("while_open"),60*1000);          /* 依實際時間差推進，不依賴計時器準時 */
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")tickLife("while_open")});
+  if(location.hash==="#debug")renderDebug();
+});
+window.addEventListener("hashchange",()=>{if(location.hash==="#debug")renderDebug();else{const d=$("dbg");if(d)d.remove()}});
 /* 開發與測試用：在主控台可用 NIGHTLINE.store 檢查資料 */
-window.NIGHTLINE={get store(){return store},ready:readyP,buildExport,buildContext,get settings(){return set}};
+window.NIGHTLINE={get store(){return store},ready:readyP,buildExport,buildContext,get settings(){return set},
+  clock,tickLife,dynamicContext,life:id=>lifeCache[lifeKey(id)],get lifeStatus(){return lifeStatus},get rules(){return LIFE},
+  setOffset(ms){clock.offset=ms;try{sessionStorage.setItem("nightline.clockOffset",String(ms))}catch(e){}}};
 }
 </script>
 </body>

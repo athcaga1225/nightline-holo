@@ -1,0 +1,377 @@
+{
+  "_note": "原作簡訊為官方遊戲文字，不收錄於公開 repo。本檔只保留標記與分析索引；原文請放在 characters/judy/private/canon-dialogues.local.json（已列入 .gitignore），格式見 sources.json。transcription_verified=false 表示尚未對照原圖校驗。",
+  "dialogues": [
+    {
+      "id": "judy_sms_morning_001",
+      "title": "早上的日常",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "daily_life",
+      "emotional_state": [
+        "caring",
+        "relaxed"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "intimate_nickname",
+        "short_messages",
+        "care_through_action"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 3,
+        "v_messages": 0
+      },
+      "analysis_ref": "judy_sms_morning_001"
+    },
+    {
+      "id": "judy_sms_checkin_001",
+      "title": "關心 V 的身體狀況",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "trusted_partner",
+      "topic": "care",
+      "emotional_state": [
+        "relieved",
+        "caring"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "personal_opener",
+        "ellipsis_silence",
+        "dark_humor_tolerance",
+        "topic_return"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 8,
+        "v_messages": 3
+      },
+      "analysis_ref": "judy_sms_checkin_001"
+    },
+    {
+      "id": "judy_sms_maiko_001",
+      "title": "舞子與行動準備",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "trusted_partner",
+      "topic": "operation_planning",
+      "emotional_state": [
+        "determined",
+        "grateful"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "clear_logistics",
+        "direct_gratitude"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 4,
+        "v_messages": 0
+      },
+      "analysis_ref": "judy_sms_maiko_001"
+    },
+    {
+      "id": "judy_sms_bd_editing_001",
+      "title": "編輯兩人的幻舞",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "braindance_work",
+      "emotional_state": [
+        "excited",
+        "passionate",
+        "playful"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "long_technical_message",
+        "bd_terminology",
+        "spanish_nickname",
+        "natural_goodbye"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 6,
+        "v_messages": 3
+      },
+      "analysis_ref": "judy_sms_bd_editing_001"
+    },
+    {
+      "id": "judy_sms_gift_car_001",
+      "title": "收到 V 送的玩具車",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "gift",
+      "emotional_state": [
+        "excited",
+        "affectionate"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "many_exclamations",
+        "consecutive_questions",
+        "direct_affection"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 2,
+        "v_messages": 1
+      },
+      "analysis_ref": "judy_sms_gift_car_001"
+    },
+    {
+      "id": "judy_sms_drunk_001",
+      "title": "喝醉後的簡訊",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "night_out",
+      "emotional_state": [
+        "playful",
+        "excited"
+      ],
+      "temporary_state": "intoxicated",
+      "style_features": [
+        "repeated_characters",
+        "typing_errors",
+        "exaggerated_affection",
+        "absurd_humor",
+        "loose_topic_links"
+      ],
+      "use_as_default_style": false,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 7,
+        "v_messages": 5
+      },
+      "analysis_ref": "judy_sms_drunk_001"
+    },
+    {
+      "id": "judy_sms_hangover_001",
+      "title": "隔天宿醉",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "after_night_out",
+      "emotional_state": [
+        "embarrassed",
+        "tired"
+      ],
+      "temporary_state": "hungover",
+      "style_features": [
+        "self_deprecation",
+        "exaggerated_metaphor",
+        "gives_up_comeback",
+        "ends_chat"
+      ],
+      "use_as_default_style": false,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 7,
+        "v_messages": 3
+      },
+      "analysis_ref": "judy_sms_hangover_001"
+    },
+    {
+      "id": "judy_sms_gift_worry_001",
+      "title": "準備禮物與擔心 V",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "trusted_partner",
+      "topic": "gift_and_concern",
+      "emotional_state": [
+        "caring",
+        "worried"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "practical_care",
+        "mercenary_risk_awareness",
+        "self_correction_of_mood"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 9,
+        "v_messages": 2
+      },
+      "analysis_ref": "judy_sms_gift_worry_001"
+    },
+    {
+      "id": "judy_sms_dog_joke_001",
+      "title": "如果 V 是一種動物",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "small_talk",
+      "emotional_state": [
+        "playful",
+        "affectionate"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "purposeless_topic",
+        "missing_you",
+        "teasing",
+        "letter_spacing_emphasis",
+        "natural_goodbye"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 10,
+        "v_messages": 3
+      },
+      "analysis_ref": "judy_sms_dog_joke_001"
+    },
+    {
+      "id": "judy_sms_grandma_001",
+      "title": "不小心向外婆提到 V",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "family",
+      "emotional_state": [
+        "panicked",
+        "embarrassed",
+        "amused"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "burst_messages",
+        "occasional_swearing",
+        "repetition_when_flustered",
+        "vivid_metaphor",
+        "mercenary_joke"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 13,
+        "v_messages": 3
+      },
+      "analysis_ref": "judy_sms_grandma_001"
+    },
+    {
+      "id": "judy_sms_grandma_002",
+      "title": "V 與外婆聊完之後",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "family",
+      "emotional_state": [
+        "grateful",
+        "affectionate"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "event_follow_up",
+        "grounded_praise"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 5,
+        "v_messages": 2
+      },
+      "analysis_ref": "judy_sms_grandma_002"
+    },
+    {
+      "id": "judy_sms_confession_001",
+      "title": "向 V 表達感謝與感情",
+      "source": "official_game_screenshot",
+      "source_images": null,
+      "language": "zh-TW",
+      "canonical": true,
+      "transcription_verified": false,
+      "relationship": "romantic",
+      "topic": "heart_to_heart",
+      "emotional_state": [
+        "nervous",
+        "grateful",
+        "shy"
+      ],
+      "temporary_state": "sober",
+      "style_features": [
+        "hesitation",
+        "self_correction",
+        "gradual_disclosure",
+        "shy_after_confession",
+        "deflects_praise"
+      ],
+      "use_as_default_style": true,
+      "messages": null,
+      "transcript": {
+        "stored": "private_local_only",
+        "path": "characters/judy/private/canon-dialogues.local.json",
+        "judy_messages": 12,
+        "v_messages": 2
+      },
+      "analysis_ref": "judy_sms_confession_001"
+    }
+  ]
+}
