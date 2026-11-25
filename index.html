@@ -66,23 +66,25 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .idc b::before{content:"";position:absolute;right:4px;top:5px;width:10px;height:14px;
   background:repeating-linear-gradient(0deg,rgba(255,225,225,.55) 0 1px,transparent 1px 3px)}
 .tw{padding-bottom:0}
-.sys{display:flex;gap:12px;align-items:baseline;font-size:11px;color:var(--red-d);margin:0 0 6px 2px;white-space:nowrap;overflow:hidden}
+.sys{display:flex;gap:12px;align-items:baseline;font-size:10px;color:rgba(217,70,78,.45);margin:0 0 4px 2px;white-space:nowrap;overflow:hidden}
 .sys .st{color:var(--mute)}
 .sys .st.on{color:var(--npc)}
-.trow{display:flex;align-items:flex-end}
-.tab{display:flex;align-items:center;gap:7px;padding:0 2px 5px;border-bottom:2px solid var(--npc);font-size:21px;font-weight:500;color:#cfe4e2;white-space:nowrap;flex:none}
-.tab svg{width:17px;height:13px}
-.sep{color:var(--npc);font-size:15px;padding:0 9px 9px;flex:none}
-.who{position:relative;display:flex;align-items:center;gap:6px;font-size:21px;color:#cfe4e2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.who .chev{font-size:11px;color:var(--npc);opacity:.8}
+/* 標題列：訊息、角色名的青線與紅線底部對齊同一條基準線 */
+.trow{display:flex;align-items:flex-end;--tline:2px}
+.tab{display:flex;align-items:center;gap:6px;padding:0 4px 4px 2px;border-bottom:var(--tline) solid #5ebfc4;font-size:21px;font-weight:400;line-height:1.3;color:#b9e0e1;white-space:nowrap;flex:none}
+.tab svg{width:17px;height:12px;color:#b9e0e1}
+.sep{color:#b9e0e1;font-size:15px;line-height:1.3;padding:0 0 calc(var(--tline) + 6px);width:20px;text-align:center;flex:none}
+.who{position:relative;display:flex;align-items:center;gap:6px;padding:0 4px 4px 2px;border-bottom:var(--tline) solid #5ebfc4;font-size:21px;font-weight:400;line-height:1.3;color:#b9e0e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who:hover{color:#e2f4f4}
+.who .chev{font-size:10px;color:#5ebfc4;opacity:.7}
 .udot{width:6px;height:6px;background:var(--red);border-radius:50%;flex:none}
-.redl{flex:1;position:relative;height:1px;background:var(--red);margin:0 0 -4px 4px;min-width:30px}
-.redl span{position:absolute;right:0;bottom:4px;font-size:9px;color:var(--red-d);white-space:nowrap}
+.redl{flex:1;position:relative;height:1px;background:rgba(217,70,78,.75);margin:0 0 0 6px;min-width:30px}
+.redl span{position:absolute;right:0;bottom:5px;font-size:9px;color:rgba(217,70,78,.45);white-space:nowrap}
 
 /* ---------- 對話區 ---------- */
 .body{flex:1;min-height:0;display:grid;grid-template-columns:var(--gut) minmax(0,1fr);margin-top:18px}
 .logwrap{position:relative;min-height:0;display:flex;flex-direction:column}
-.log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 20px 18px 16px;
+.log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 20px 18px 6px;
   border-right:1px solid var(--red-f);scrollbar-width:thin;scrollbar-color:var(--red) transparent}
 .log::-webkit-scrollbar{width:3px}
 .log::-webkit-scrollbar-thumb{background:var(--red)}
@@ -206,7 +208,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   .head{grid-template-columns:44px minmax(0,1fr)}
   .idslot{height:58px}.phone{display:none}
   .idc{width:32px;height:48px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
-  .tab span{display:none}.tab{font-size:18px}.who{font-size:18px}.sep{padding:0 7px 7px}
+  .tab span{display:none}.tab{font-size:18px}.who{font-size:18px}.sep{width:16px}
   .redl span{display:none}
   #sysId{display:none}.sys{gap:8px}
   .term.typing-on .hints{display:none}
@@ -229,7 +231,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
       <div class="tw">
         <div class="sys en"><span id="sysId">NL_HOLO_TRN</span><span id="sysEn"></span><span class="st" id="sysSt">LINK OK</span></div>
         <div class="trow">
-          <div class="tab"><svg viewBox="0 0 17 13" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x=".7" y=".7" width="15.6" height="11.6"/><path d="M.7.7l7.8 6.4L16.3.7"/></svg><span>訊息</span></div>
+          <div class="tab"><svg viewBox="0 0 17 12" aria-hidden="true"><rect width="17" height="12" fill="currentColor"/><path d="M.8.8l7.7 6 7.7-6" fill="none" stroke="#1a0507" stroke-width="1.4"/></svg><span>訊息</span></div>
           <span class="sep" aria-hidden="true">›</span>
           <button class="who" id="who" aria-haspopup="dialog" title="切換聯絡人"><span id="whoName"></span><span class="chev" aria-hidden="true">▾</span></button>
           <div class="redl" aria-hidden="true"><span class="en">VER_NL20.77</span></div>
