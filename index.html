@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
+<title>NIGHTLINE // HOLO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Rajdhani:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE   安靜、俐落的遊戲內私訊終端，資訊密度高但不吵
+IDEA    夜城的全像訊息介面：靠左的單一終端，右側留給城市的黑
+PICTURE 對話本身：細線切角訊息框、紅色識別卡、紅色捲軸線
+COLOUR  紅黑漸層底；暗紅線條與提示；NPC 青藍、V 薄荷綠
+TYPE    Noto Sans TC 500 內文；Rajdhani 只用在英文系統小字
+LAYOUT  桌機靠左約四成寬；面板按需開啟；手機全寬，輸入區貼底
+*/
+:root{
+  color-scheme:dark;
+  --red:#d9464e;--red-d:rgba(217,70,78,.55);--red-f:rgba(217,70,78,.16);
+  --npc:#58c2c0;--npc-t:#e4f2f0;--npc-bg:rgba(70,160,160,.12);
+  --v:#6fdfa7;--v-t:#a9f1cc;--v-bg:rgba(80,190,135,.11);
+  --mute:rgba(232,205,205,.5);--ink:#ecdede;
+  --e-n:#488b98;--f-n:#102126;--t-n:#76d7e0;--e-v:#4e997e;--f-v:#132d26;--t-v:#78dfb8;
+  --gut:84px;--app-h:100dvh;
+}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%}
+body{
+  background:
+    radial-gradient(90% 70% at 78% 8%,rgba(120,22,30,.55),transparent 60%),
+    radial-gradient(70% 60% at 10% 100%,rgba(70,10,14,.6),transparent 70%),
+    linear-gradient(170deg,#2b080b 0%,#1a0507 48%,#0b0203 100%);
+  color:var(--ink);font:500 15.5px/1.55 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  overflow:hidden;-webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1.5px solid var(--npc);outline-offset:2px}
+.en{font-family:Rajdhani,"Noto Sans TC",sans-serif;font-weight:600;letter-spacing:.04em}
+
+.stage{height:var(--app-h);display:flex;align-items:stretch;gap:32px;
+  padding:clamp(24px,8vh,84px) 0 clamp(14px,3.5vh,36px) clamp(12px,4.5vw,92px)}
+.term{width:clamp(500px,40vw,660px);display:flex;flex-direction:column;min-height:0}
+
+/* ---------- 標題列 ---------- */
+.head{display:grid;grid-template-columns:var(--gut) minmax(0,1fr);align-items:end}
+.idslot{position:relative;height:92px;display:flex;align-items:flex-end;gap:10px;padding-bottom:2px}
+.phone{width:13px;opacity:.75;margin-bottom:14px;flex:none}
+.idc{position:relative;width:50px;height:76px;flex:none;transform:perspective(260px) rotateY(20deg);transform-origin:left center}
+.idc i{position:absolute;inset:0;transform:translate(-7px,-8px);border:1px solid var(--red-d);background:rgba(217,70,78,.14)}
+.idc b{position:absolute;inset:0;border:1px solid var(--red);background:linear-gradient(160deg,rgba(217,70,78,.62),rgba(140,30,38,.42));
+  display:grid;place-items:center;font-size:22px;font-weight:700;color:#ffe3e3;line-height:1}
+.idc b::after{content:attr(data-code);position:absolute;left:4px;bottom:3px;font:600 8px/1 Rajdhani,sans-serif;letter-spacing:.06em;color:rgba(255,220,220,.7)}
+.idc b::before{content:"";position:absolute;right:4px;top:5px;width:10px;height:14px;
+  background:repeating-linear-gradient(0deg,rgba(255,225,225,.55) 0 1px,transparent 1px 3px)}
+.tw{padding-bottom:0}
+.sys{display:flex;gap:12px;align-items:baseline;font-size:11px;color:var(--red-d);margin:0 0 6px 2px;white-space:nowrap;overflow:hidden}
+.sys .st{color:var(--mute)}
+.sys .st.on{color:var(--npc)}
+.trow{display:flex;align-items:flex-end}
+.tab{display:flex;align-items:center;gap:7px;padding:0 2px 5px;border-bottom:2px solid var(--npc);font-size:21px;font-weight:500;color:#cfe4e2;white-space:nowrap;flex:none}
+.tab svg{width:17px;height:13px}
+.sep{color:var(--npc);font-size:15px;padding:0 9px 9px;flex:none}
+.who{position:relative;display:flex;align-items:center;gap:6px;font-size:21px;color:#cfe4e2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who .chev{font-size:11px;color:var(--npc);opacity:.8}
+.udot{width:6px;height:6px;background:var(--red);border-radius:50%;flex:none}
+.redl{flex:1;position:relative;height:1px;background:var(--red);margin:0 0 -4px 4px;min-width:30px}
+.redl span{position:absolute;right:0;bottom:4px;font-size:9px;color:var(--red-d);white-space:nowrap}
+
+/* ---------- 對話區 ---------- */
+.body{flex:1;min-height:0;display:grid;grid-template-columns:var(--gut) minmax(0,1fr);margin-top:18px}
+.logwrap{position:relative;min-height:0;display:flex;flex-direction:column}
+.log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 20px 18px 16px;
+  border-right:1px solid var(--red-f);scrollbar-width:thin;scrollbar-color:var(--red) transparent}
+.log::-webkit-scrollbar{width:3px}
+.log::-webkit-scrollbar-thumb{background:var(--red)}
+.log::-webkit-scrollbar-track{background:transparent}
+.botl{height:1px;background:var(--red-d);flex:none}
+
+.day{display:flex;align-items:center;gap:10px;margin:18px 0 14px;font-size:11px;color:var(--red-d)}
+.day::before,.day::after{content:"";flex:1;height:1px;background:var(--red-f)}
+.day:first-child{margin-top:6px}
+.grp{display:flex;flex-direction:column;align-items:flex-start}
+.grp.v{align-items:flex-end}
+.grp+.grp{margin-top:16px}
+.grp.join{margin-top:3px}
+.bub{position:relative;max-width:min(88%,34em);padding:7px 12px;color:var(--t-n);font-size:16px;line-height:1.65;margin-top:5px}
+.bub:first-child{margin-top:0}
+.v .bub{color:var(--t-v)}
+.bub svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.bub .tx{position:relative;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.stamp{font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#6a8f93;margin:6px 2px 0;white-space:nowrap}
+.dots{position:relative;display:flex;gap:4px;padding:6px 2px 3px}
+.dots i{width:5px;height:5px;background:var(--t-n);opacity:.3;animation:bl 1.1s infinite}
+.dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}
+@keyframes bl{40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.dots i{animation:none;opacity:.7}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.jump{position:absolute;right:16px;bottom:12px;display:none;align-items:center;gap:6px;height:32px;padding:0 12px;
+  font-size:13px;color:#06140f;background:var(--npc);clip-path:polygon(0 0,100% 0,100% 70%,calc(100% - 9px) 100%,0 100%)}
+.jump.on{display:flex}
+
+/* ---------- 輸入區 ---------- */
+.comp{display:grid;grid-template-columns:var(--gut) minmax(0,1fr);padding-top:12px;flex:none}
+.box{position:relative;display:flex;align-items:flex-end;gap:10px;padding:8px 8px 8px 14px;min-height:48px}
+.box svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.box path{stroke:var(--red-d);fill:rgba(20,5,7,.55);transition:stroke .15s}
+.box.f path{stroke:var(--v)}
+.box .pre{position:relative;color:var(--v);font:600 13px/1 Rajdhani,sans-serif;padding-bottom:9px;flex:none;opacity:.8}
+textarea{position:relative;flex:1;resize:none;border:0;outline:0;background:transparent;color:var(--v-t);
+  font:500 16px/1.5 "Noto Sans TC",sans-serif;padding:4px 0;height:32px;max-height:132px;overflow-y:auto;scrollbar-width:thin}
+textarea::placeholder{color:rgba(169,241,204,.35)}
+.send{position:relative;flex:none;height:34px;padding:0 14px 0 12px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;
+  color:#05140d;background:var(--v);clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+.send:disabled{background:rgba(111,223,167,.16);color:rgba(169,241,204,.45);cursor:default}
+.send svg{width:13px;height:13px}
+.hints{grid-column:2;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin-top:10px;font-size:13px}
+.hint{display:flex;align-items:center;gap:7px;color:var(--red);min-height:28px;white-space:nowrap}
+.hint.static{color:var(--mute)}
+.key{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#bfe9ea;color:#0b1a1c;font:600 12px/1 Rajdhani,sans-serif}
+.hint.static .key{background:rgba(191,233,234,.22);color:#cfe4e2}
+.note{margin-left:auto;font-size:11px;color:var(--mute);opacity:.8}
+
+/* ---------- 面板 ---------- */
+.sheet{display:none;flex-direction:column;width:330px;align-self:flex-start;margin-top:110px;max-height:calc(100% - 110px);
+  background:rgba(22,6,8,.9);border:1px solid var(--red-d);clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)}
+.sheet.open{display:flex}
+.sh-h{display:flex;align-items:center;border-bottom:1px solid var(--red-f);padding:0 6px 0 14px}
+.sh-t{height:44px;padding:0 10px;font-size:14px;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.sh-t[aria-selected=true]{color:#cfe4e2;border-color:var(--npc)}
+.x{margin-left:auto;width:40px;height:40px;font-size:20px;color:var(--red)}
+.sh-b{overflow-y:auto;padding:10px 14px 16px;scrollbar-width:thin;scrollbar-color:var(--red) transparent}
+.ct{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:2px 12px;align-items:center;width:100%;text-align:left;padding:10px 8px;border-left:2px solid transparent}
+.ct+.ct{border-top:1px solid var(--red-f)}
+.ct[aria-current=true]{border-left-color:var(--npc);background:rgba(88,194,192,.06)}
+.ct:hover{background:rgba(217,70,78,.07)}
+.ct .idc{grid-row:span 2;width:30px;height:44px;margin-left:6px}
+.ct .idc b{font-size:14px}.ct .idc b::after,.ct .idc b::before{display:none}
+.ct .nm{font-size:15px;color:#e2ecea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ct .tm{font-size:11px;color:var(--mute);text-align:right}
+.ct .pv{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
+.ct .ub{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font:600 11px/18px Rajdhani,sans-serif;text-align:center}
+.pf h2{margin:6px 0 0;font-size:20px;font-weight:700;color:#e8f1ef}
+.pf .enn{font-size:12px;color:var(--red-d);margin-top:2px}
+.pf dl{margin:14px 0 0;display:grid;grid-template-columns:5.2em minmax(0,1fr);gap:9px 10px;font-size:14px}
+.pf dt{color:var(--red);font-weight:500}
+.pf dd{margin:0;color:#d9e6e4;font-weight:400;line-height:1.6}
+.pf h3{font-size:12px;font-weight:500;color:var(--mute);margin:18px 0 0;padding-top:12px;border-top:1px solid var(--red-f)}
+.pf .act{margin-top:16px;display:flex;gap:10px}
+.btn{height:36px;padding:0 14px;font-size:14px;border:1px solid var(--red-d);color:var(--red)}
+.btn.pri{background:var(--red);color:#fff;border-color:var(--red)}
+.pf .fan{margin-top:16px;font-size:12px;line-height:1.6;color:var(--mute);font-weight:400}
+.scrim{display:none}
+
+/* ---------- 確認 ---------- */
+.dlg{position:fixed;inset:0;display:none;place-items:center;background:rgba(8,2,3,.6);z-index:30;padding:20px}
+.dlg.open{display:grid}
+.dlg .card{width:min(380px,100%);background:#1d0709;border:1px solid var(--red);padding:18px 18px 16px;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)}
+.dlg h3{margin:0 0 8px;font-size:17px;color:#f1dede}
+.dlg p{margin:0;font-size:14px;color:var(--mute);font-weight:400}
+.dlg .act{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+
+/* ---------- 響應 ---------- */
+@media (max-width:1100px){
+  .term{width:min(640px,66vw)}
+  .sheet{position:fixed;right:0;top:0;bottom:0;margin:0;max-height:none;width:min(360px,100%);z-index:20;clip-path:none;border-width:0 0 0 1px}
+  .scrim.open{display:block;position:fixed;inset:0;background:rgba(6,1,2,.5);z-index:19}
+}
+@media (max-width:720px){
+  :root{--gut:0px}
+  body{font-size:16px}
+  .stage{padding:0;gap:0}
+  .term{width:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
+  .head{grid-template-columns:44px minmax(0,1fr)}
+  .idslot{height:58px}.phone{display:none}
+  .idc{width:32px;height:48px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
+  .tab span{display:none}.tab{font-size:18px}.who{font-size:18px}.sep{padding:0 7px 7px}
+  .redl span{display:none}
+  .body{margin-top:12px}
+  .log{padding:4px 10px 14px 2px}
+  .bub{max-width:86%}
+  .hints{gap:4px 14px}.hint.static{display:none}.note{font-size:10px}
+  .sheet{width:100%;border:0}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <main class="term" aria-label="NIGHTLINE 私訊終端">
+    <header class="head">
+      <div class="idslot">
+        <svg class="phone" viewBox="0 0 13 22" fill="none" stroke="#9fd6d6" stroke-width="1.2" aria-hidden="true"><rect x="1" y="5" width="8" height="15"/><path d="M3 16h4M8 3c1.5 0 3 1 3.5 2.5M8 .8c2.6 0 4.4 1.6 4.8 4"/></svg>
+        <div id="idcard"></div>
+      </div>
+      <div class="tw">
+        <div class="sys en"><span id="sysId">NL_HOLO_TRN</span><span id="sysEn"></span><span class="st" id="sysSt">LINK OK</span></div>
+        <div class="trow">
+          <div class="tab"><svg viewBox="0 0 17 13" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x=".7" y=".7" width="15.6" height="11.6"/><path d="M.7.7l7.8 6.4L16.3.7"/></svg><span>訊息</span></div>
+          <span class="sep" aria-hidden="true">›</span>
+          <button class="who" id="who" aria-haspopup="dialog" title="切換聯絡人"><span id="whoName"></span><span class="chev" aria-hidden="true">▾</span></button>
+          <div class="redl" aria-hidden="true"><span class="en">VER_NL20.77</span></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="body">
+      <div></div>
+      <div class="logwrap">
+        <div class="log" id="log" role="log" aria-live="polite" aria-label="對話紀錄"></div>
+        <button class="jump" id="jump"><span id="jumpTx">回到最新訊息</span> ↓</button>
+        <div class="botl"></div>
+      </div>
+    </div>
+
+    <div class="comp">
+      <div></div>
+      <form class="box" id="box" autocomplete="off">
+        <svg aria-hidden="true"><path stroke-width="1.5" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg>
+        <span class="pre" aria-hidden="true">V&gt;</span>
+        <label class="sr" for="ta">以 V 的身分輸入訊息</label>
+        <textarea id="ta" rows="1" placeholder="以 V 的身分回覆…" enterkeyhint="send"></textarea>
+        <button class="send" id="send" type="submit" disabled>傳送<svg viewBox="0 0 13 13" fill="currentColor" aria-hidden="true"><path d="M0 0l13 6.5L0 13l2-6.5z"/></svg></button>
+      </form>
+      <div class="hints">
+        <span class="hint static"><span class="key">⏎</span>傳送</span>
+        <span class="hint static"><span class="key">⇧⏎</span>換行</span>
+        <button class="hint" id="hC"><span class="key">C</span>聯絡人</button>
+        <button class="hint" id="hI"><span class="key">I</span>資料</button>
+        <button class="hint" id="hR"><span class="key">R</span>重設</button>
+        <span class="note">模擬模式・非官方粉絲作品</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="sheet" id="sheet" role="dialog" aria-label="聯絡人與人物資料">
+    <div class="sh-h" role="tablist">
+      <button class="sh-t" role="tab" id="tC" aria-selected="true">聯絡人</button>
+      <button class="sh-t" role="tab" id="tI" aria-selected="false">人物資料</button>
+      <button class="x" id="sx" aria-label="關閉">×</button>
+    </div>
+    <div class="sh-b" id="shb"></div>
+  </aside>
+</div>
+
+<div class="dlg" id="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgT">
+  <div class="card">
+    <h3 id="dlgT">重設對話？</h3>
+    <p id="dlgP"></p>
+    <div class="act"><button class="btn" id="dNo">取消</button><button class="btn pri" id="dYes">重設</button></div>
+  </div>
+</div>
+
+<script>
+{
+const C={
+  judy:{name:"茱蒂・艾法瑞茲",short:"茱蒂",en:"JUDY ALVAREZ",g:"茱",code:"JA-07",
+    role:"超夢技術師",base:"夜城",
+    rel:"交情很深的朋友。一起扛過幾件不能說的事，現在有事沒事都會傳訊息。",
+    t:[["個性","直率、心軟，看不慣欺負人的事"],["語氣","口語、愛吐槽，熟了會用顏文字"],["回覆","偏短，常分兩則連發"]],
+    seed:[[-985,"n","V，你還醒著嗎"],[-984,"n","我把上次那段超夢修好了，畫面乾淨很多"],[-981,"v","醒著。修好就好，辛苦了"],[-980,"n","下次換你陪我測試，不准逃 ;)"]],
+    pool:{
+      q:["嗯……問得好，我想一下","你問我？我比較想問你 -.-","老實說我也不確定，但我站你這邊","這個嘛，見面再說比較好"],
+      thx:["跟我客氣什麼","好啦，收下了 :)","欠我一杯，記帳"],
+      tired:["你最近是不是都沒睡？","先去休息。我是認真的","別硬撐，V"],
+      any:["收到。我手邊在剪片，等我一下","你又在哪裡惹事了？老實招來","哈，這個我喜歡","好啦好啦，聽你的","這種事你應該早點跟我說 -.-","我懂。真的。","等等，渲染跑完了……好，繼續說","下次碰面我請你喝一杯"]}},
+  panam:{name:"帕娜・帕瑪",short:"帕娜",en:"PANAM PALMER",g:"帕",code:"PP-11",
+    role:"遊牧民",base:"夜城外的荒原",
+    rel:"一起開過車、也一起闖過險的夥伴。嘴上不說，但營地永遠替你留個位置。",
+    t:[["個性","爽快、倔強、重義氣"],["語氣","乾脆，偶爾嘴硬"],["回覆","直接講重點"]],
+    seed:[[-410,"n","我們在城外紮營，訊號時有時無"],[-409,"n","有空打給我。不是急事……大概不是"]],
+    pool:{
+      q:["講重點，V。我這邊訊號只有一格","你覺得呢？我想聽你說","問我就對了。答案是：看情況"],
+      thx:["少來，我們之間不用這套","行，記住了"],
+      tired:["那就過來營地睡一晚，比城裡安靜","別逞強。我會罵人的"],
+      any:["哈！行啊，算你一份","車又出問題了。別問。","需要支援就喊一聲","城裡的人真的很麻煩……不包括你。大概。","今晚營地有篝火，有空就過來","我才沒有在擔心你","好，我記下了","收到，晚點回你"]}},
+  johnny:{name:"強尼・銀手",short:"強尼",en:"JOHNNY SILVERHAND",g:"銀",code:"JS-77",
+    role:"搖滾樂手（以數位人格的形式存在）",base:"你的腦袋裡",
+    rel:"和 V 共用一副身體的不速之客。互看不順眼，又誰也離不開誰。",
+    t:[["個性","叛逆、尖銳，痛恨企業"],["語氣","嘲諷帶刺，很少說好聽話"],["回覆","短句，愛反問"]],
+    seed:[[-120,"n","你又在發呆了"],[-119,"v","我在想事情"],[-119,"n","我知道。我聽得到。"]],
+    pool:{
+      q:["你問我？自己想","答案你心裡早就有了，別裝","這種問題，問了也是白問"],
+      thx:["噁心。不用謝","省省吧"],
+      tired:["累了就睡。喔對，那也算我的時間","你的身體，你自己顧好"],
+      any:["你傳訊息給我？我就在你腦袋裡，天才","嘖。隨便你","這城市需要的是一把火，不是更多廢話","說得好像你有得選一樣","行，這次算你對。只有這次","哼。繼續講，我在聽","冷靜點，你心跳吵死了"]}}
+};
+const ORDER=["judy","panam","johnny"],KEY="nightline-holo-v1";
+const $=id=>document.getElementById(id);
+const log=$("log"),ta=$("ta"),sendB=$("send"),box=$("box"),sheet=$("sheet"),scrim=$("scrim"),dlg=$("dlg");
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const R=Math.random,sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function seedOf(id,now=Date.now()){
+  return {log:C[id].seed.map(([m,f,t],i)=>({id:"s"+i,from:f,text:t,t:now+m*60000})),draft:"",unread:0};
+}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.c&&ORDER.every(k=>s.c[k]))return s}catch(e){}return null}
+let S=load();
+if(!S){const n=Date.now();S={active:"judy",c:{}};ORDER.forEach(k=>S.c[k]=seedOf(k,n));}
+if(!C[S.active])S.active="judy";
+let saveT;function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function saveSoon(){clearTimeout(saveT);saveT=setTimeout(save,300)}
+
+const typing={},pend={},scrollPos={};
+let newCount=0,sheetMode="contacts";
+
+/* ---- 時間 ---- */
+const p2=n=>String(n).padStart(2,"0");
+const hm=t=>{const d=new Date(t);return p2(d.getHours())+":"+p2(d.getMinutes())};
+const dayKey=t=>new Date(t).toDateString();
+function dayLabel(t){const d=new Date(t),n=new Date();const y=new Date(n);y.setDate(n.getDate()-1);
+  if(d.toDateString()===n.toDateString())return"今天";if(d.toDateString()===y.toDateString())return"昨天";
+  return (d.getMonth()+1)+"月"+d.getDate()+"日"}
+
+/* ---- 框形：細線 SVG，切角與尾角線寬一致 ---- */
+const O=.5;
+function shape(kind,w,h){
+  if(kind==="box"){const c=9;return `M${O} ${O}H${w-O}V${h-c}L${w-c} ${h-O}H${O}Z`}
+  /* v2 框形：左上 9、右下 9、左下 8 切角；兩方同形 */
+  return `M9 ${O}H${w-O}V${h-9}L${w-9} ${h-O}H8L${O} ${h-8}V9Z`;
+}
+function draw(el){
+  const w=el.offsetWidth,h=el.offsetHeight;if(!w||!h)return;
+  const s=el.querySelector("svg");s.setAttribute("width",w);s.setAttribute("height",h);s.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  s.firstElementChild.setAttribute("d",shape(el.dataset.k,w,h));
+}
+const ro=new ResizeObserver(es=>es.forEach(e=>draw(e.target)));
+const roBox=new ResizeObserver(()=>draw(box));box.dataset.k="box";roBox.observe(box);
+
+function bub(kind,inner){
+  const col=kind==="n"?"var(--e-n)":"var(--e-v)",bg=kind==="n"?"var(--f-n)":"var(--f-v)";
+  return `<div class="bub" data-k="${kind}"><svg aria-hidden="true"><path fill="${bg}" stroke="${col}" stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg>${inner}</div>`;
+}
+function cardHTML(id){const c=C[id];return `<div class="idc" aria-hidden="true"><i></i><b data-code="${esc(c.code)}">${esc(c.g)}</b></div>`}
+
+/* ---- 繪製 ---- */
+function renderLog(){
+  const id=S.active,L=S.c[id].log;let h="",prev=null,grp=[];
+  const flush=()=>{if(!grp.length)return;const f=grp[0].from;
+    h+=`<div class="grp ${f==="v"?"v":"n"}">`+grp.map(m=>bub(f==="v"?"v":"n",`<span class="tx">${esc(m.text)}</span>`)).join("")
+      +`<div class="stamp en">${hm(grp[grp.length-1].t)}</div></div>`;grp=[]};
+  L.forEach(m=>{
+    if(!prev||dayKey(prev.t)!==dayKey(m.t)){flush();h+=`<div class="day">${dayLabel(m.t)}</div>`}
+    else if(prev.from!==m.from||m.t-prev.t>6*60000)flush();
+    grp.push(m);prev=m});
+  flush();
+  if(typing[id]){const join=prev&&prev.from==="n";
+    h+=`<div class="grp n${join?" join":""}">`+bub("n",`<span class="dots"><i></i><i></i><i></i></span><span class="sr">${esc(C[id].short)} 輸入中</span>`)+`</div>`}
+  ro.disconnect();log.innerHTML=h;log.querySelectorAll(".bub").forEach(b=>{draw(b);ro.observe(b)});
+}
+function renderHead(){
+  const c=C[S.active];
+  $("idcard").innerHTML=cardHTML(S.active);
+  const others=ORDER.some(k=>k!==S.active&&S.c[k].unread);
+  $("whoName").textContent=c.name;
+  const w=$("who");w.querySelector(".udot")?.remove();
+  if(others)w.insertAdjacentHTML("beforeend",'<span class="udot" title="其他聯絡人有新訊息"></span>');
+  $("sysEn").textContent=c.en+" · "+c.code;
+  const st=$("sysSt");st.textContent=typing[S.active]?"輸入中…":"LINK OK · MOCK";st.classList.toggle("on",!!typing[S.active]);
+  document.title=c.short+" — NIGHTLINE // HOLO";
+}
+function renderSheet(){
+  $("tC").setAttribute("aria-selected",sheetMode==="contacts");$("tI").setAttribute("aria-selected",sheetMode==="profile");
+  const b=$("shb");
+  if(sheetMode==="contacts"){
+    b.innerHTML=ORDER.map(k=>{const c=C[k],st=S.c[k],last=st.log[st.log.length-1];
+      const pv=typing[k]?"輸入中…":st.draft?"草稿："+st.draft:last?(last.from==="v"?"你：":"")+last.text:"";
+      return `<button class="ct" data-id="${k}" aria-current="${k===S.active}">${cardHTML(k)}
+        <span class="nm">${esc(c.name)}</span><span class="tm en">${last?hm(last.t):""}</span>
+        <span class="pv">${esc(pv)}</span>${st.unread?`<span class="ub">${st.unread}</span>`:"<span></span>"}</button>`}).join("");
+  }else{
+    const c=C[S.active];
+    b.innerHTML=`<div class="pf">${cardHTML(S.active)}<h2>${esc(c.name)}</h2><div class="enn en">${esc(c.en)} · ${esc(c.code)}</div>
+      <dl><dt>身分</dt><dd>${esc(c.role)}</dd><dt>所在</dt><dd>${esc(c.base)}</dd><dt>與 V</dt><dd>${esc(c.rel)}</dd></dl>
+      <h3>基本設定</h3><dl>${c.t.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join("")}<dt>模式</dt><dd>模擬回覆（Mock Mode），未連接 AI</dd></dl>
+      <div class="act"><button class="btn" id="pfR">重設這段對話</button></div>
+      <p class="fan">NIGHTLINE // HOLO 為非官方粉絲作品，與 CD PROJEKT RED 無關。角色名稱權利屬原權利人，對話內容皆為原創模擬文字。</p></div>`;
+    $("pfR").onclick=askReset;
+  }
+}
+
+/* ---- 捲動 ---- */
+const nearBottom=()=>log.scrollHeight-log.scrollTop-log.clientHeight<56;
+const toBottom=()=>{log.scrollTop=log.scrollHeight;newCount=0;updJump()};
+function updJump(){const j=$("jump"),far=log.scrollHeight-log.scrollTop-log.clientHeight>240;
+  j.classList.toggle("on",newCount>0||far);$("jumpTx").textContent=newCount?`${newCount} 則新訊息`:"回到最新訊息"}
+log.addEventListener("scroll",()=>{if(nearBottom())newCount=0;updJump()},{passive:true});
+$("jump").onclick=()=>log.scrollTo({top:log.scrollHeight,behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});
+function refresh(isMsg){const near=nearBottom(),top=log.scrollTop;renderLog();renderHead();
+  if(near)toBottom();else{log.scrollTop=top;if(isMsg)newCount++;updJump()}}
+
+/* ---- 模擬回覆 ---- */
+function pick(arr,avoid){let x;for(let i=0;i<5;i++){x=arr[Math.floor(R()*arr.length)];if(x!==avoid)break}return x}
+function compose(id,text){const p=C[id].pool,L=S.c[id].log,last=L.length?L[L.length-1].text:"";
+  let k="any";if(/謝|感恩|多謝/.test(text))k="thx";else if(/累|睏|睡|好煩|撐不住/.test(text))k="tired";else if(/[?？]|嗎|呢$|怎麼|為什麼|要不要/.test(text))k="q";
+  const out=[pick(p[k],last)];if(R()<.3)out.push(pick(p.any,out[0]));return out}
+function setTyping(id,v){typing[id]=v;if(id===S.active)refresh(false);if(sheet.classList.contains("open"))renderSheet()}
+function deliver(id,text){S.c[id].log.push({id:"m"+Date.now()+R(),from:"n",text,t:Date.now()});
+  if(id!==S.active)S.c[id].unread++;save();
+  if(id===S.active)refresh(true);else renderHead();if(sheet.classList.contains("open"))renderSheet()}
+async function reply(id,text){pend[id]=(pend[id]||0)+1;
+  await sleep(450+R()*500);setTyping(id,true);
+  for(const m of compose(id,text)){await sleep(Math.min(2600,750+m.length*55+R()*400));
+    typing[id]=false;deliver(id,m);if(pend[id]>0)setTyping(id,true)}
+  await sleep(200);pend[id]--;if(!pend[id])setTyping(id,false)}
+
+/* ---- 輸入 ---- */
+let composing=false;
+function size(){ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,132)+"px";sendB.disabled=!ta.value.trim()}
+ta.addEventListener("compositionstart",()=>composing=true);
+ta.addEventListener("compositionend",()=>setTimeout(()=>composing=false,0));
+ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){if(composing||e.isComposing||e.keyCode===229)return;e.preventDefault();send()}});
+ta.addEventListener("input",()=>{S.c[S.active].draft=ta.value;size();saveSoon()});
+ta.addEventListener("focus",()=>{box.classList.add("f");if(nearBottom())setTimeout(toBottom,250)});
+ta.addEventListener("blur",()=>box.classList.remove("f"));
+box.addEventListener("submit",e=>{e.preventDefault();send();ta.focus()});
+function send(){const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
+  const id=S.active;S.c[id].log.push({id:"m"+Date.now(),from:"v",text,t:Date.now()});S.c[id].draft="";ta.value="";size();save();
+  renderLog();toBottom();reply(id,text)}
+
+/* ---- 切換／面板 ---- */
+function switchTo(id){if(!C[id])return;scrollPos[S.active]=nearBottom()?null:log.scrollTop;
+  S.active=id;S.c[id].unread=0;save();newCount=0;renderLog();renderHead();
+  ta.value=S.c[id].draft||"";size();
+  if(scrollPos[id]!=null)log.scrollTop=scrollPos[id];else toBottom();updJump();
+  if(matchMedia("(max-width:1100px)").matches)closeSheet();else renderSheet()}
+function openSheet(m){sheetMode=m;renderSheet();sheet.classList.add("open");scrim.classList.add("open")}
+function closeSheet(){sheet.classList.remove("open");scrim.classList.remove("open")}
+function toggleSheet(m){sheet.classList.contains("open")&&sheetMode===m?closeSheet():openSheet(m)}
+$("shb").addEventListener("click",e=>{const b=e.target.closest(".ct");if(b)switchTo(b.dataset.id)});
+$("who").onclick=()=>toggleSheet("contacts");$("hC").onclick=()=>toggleSheet("contacts");$("hI").onclick=()=>toggleSheet("profile");
+$("tC").onclick=()=>{sheetMode="contacts";renderSheet()};$("tI").onclick=()=>{sheetMode="profile";renderSheet()};
+$("sx").onclick=closeSheet;scrim.onclick=closeSheet;
+
+/* ---- 重設 ---- */
+function askReset(){const c=C[S.active];$("dlgT").textContent=`重設與${c.short}的對話？`;
+  $("dlgP").textContent=`這會清除你和${c.short}的所有訊息與未送出草稿，恢復成初始對話。其他角色的紀錄不受影響。`;
+  dlg.classList.add("open");$("dNo").focus()}
+const closeDlg=()=>{dlg.classList.remove("open")};
+$("hR").onclick=askReset;$("dNo").onclick=closeDlg;dlg.onclick=e=>{if(e.target===dlg)closeDlg()};
+$("dYes").onclick=()=>{const id=S.active;S.c[id]=seedOf(id);typing[id]=false;save();closeDlg();
+  ta.value="";size();renderLog();renderHead();toBottom();if(sheet.classList.contains("open"))renderSheet();ta.focus()};
+
+/* ---- 快捷鍵 ---- */
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){if(dlg.classList.contains("open"))closeDlg();else if(sheet.classList.contains("open"))closeSheet();return}
+  if(e.target.closest("textarea,input")||e.metaKey||e.ctrlKey||e.altKey||dlg.classList.contains("open"))return;
+  const k=e.key.toLowerCase();
+  if(k==="c"){e.preventDefault();toggleSheet("contacts")}else if(k==="i"){e.preventDefault();toggleSheet("profile")}
+  else if(k==="r"){e.preventDefault();askReset()}else if(k==="/"){e.preventDefault();ta.focus()}});
+
+/* ---- 手機鍵盤：以可視高度鎖住版面，輸入區不被遮住 ---- */
+const vv=window.visualViewport;
+function fitVV(){if(!vv)return;const near=nearBottom();document.documentElement.style.setProperty("--app-h",vv.height+"px");
+  window.scrollTo(0,0);if(near)requestAnimationFrame(toBottom)}
+if(vv){vv.addEventListener("resize",fitVV);fitVV()}
+
+renderHead();renderLog();ta.value=S.c[S.active].draft||"";size();toBottom();
+}
+</script>
+</body>
+</html>
