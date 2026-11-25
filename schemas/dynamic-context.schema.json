@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dynamic Context（私人後端產生，送入 AI；開發模式下可由 /api/debug/state 檢視）",
+  "type": "object",
+  "properties": {
+    "character_id": {},
+    "clock_mode": {},
+    "timezone": {},
+    "current_date": {},
+    "current_time": {},
+    "day_of_week": {},
+    "story_timeline": {},
+    "relationship": {},
+    "last_interaction": {},
+    "minutes_since_last_interaction": {},
+    "crossed_day": {},
+    "crossed_week": {},
+    "current_location": {},
+    "current_activity": {},
+    "activity_started_at": {},
+    "estimated_activity_end": {},
+    "work_state": {},
+    "current_mood": {},
+    "physical_state": {},
+    "fatigue": {},
+    "daily_events": {},
+    "upcoming_plans": {},
+    "unfinished_work": {},
+    "recent_completed": {},
+    "unresolved_topics": {}
+  }
+}

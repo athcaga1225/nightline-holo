@@ -1,0 +1,101 @@
+{
+  "_note": "公開版原作語料索引：只有 id 與不涉及原文的基本資訊。原文、截圖、人格分析只存在私人後端。",
+  "dialogues": [
+    {
+      "id": "judy_sms_morning_001",
+      "title": "早上的日常",
+      "relationship": "romantic",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_checkin_001",
+      "title": "關心 V 的身體狀況",
+      "relationship": "trusted_partner",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_maiko_001",
+      "title": "舞子與行動準備",
+      "relationship": "trusted_partner",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_bd_editing_001",
+      "title": "編輯兩人的幻舞",
+      "relationship": "romantic",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_gift_car_001",
+      "title": "收到 V 送的玩具車",
+      "relationship": "romantic",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_drunk_001",
+      "title": "喝醉後的簡訊",
+      "relationship": "romantic",
+      "temporary_state": "intoxicated",
+      "use_as_default_style": false,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_hangover_001",
+      "title": "隔天宿醉",
+      "relationship": "romantic",
+      "temporary_state": "hungover",
+      "use_as_default_style": false,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_gift_worry_001",
+      "title": "準備禮物與擔心 V",
+      "relationship": "trusted_partner",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_dog_joke_001",
+      "title": "如果 V 是一種動物",
+      "relationship": "romantic",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_grandma_001",
+      "title": "不小心向外婆提到 V",
+      "relationship": "romantic",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_grandma_002",
+      "title": "V 與外婆聊完之後",
+      "relationship": "romantic",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    },
+    {
+      "id": "judy_sms_confession_001",
+      "title": "向 V 表達感謝與感情",
+      "relationship": "romantic",
+      "temporary_state": "sober",
+      "use_as_default_style": true,
+      "canonical": true
+    }
+  ]
+}

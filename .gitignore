@@ -1,2 +1,9 @@
-# 原作簡訊原文等私人資料：只放本機，不上傳公開 repo
+# 私人資料：原作原文、截圖、人格、Prompt、規則等只放私人 repo／本機，不得放進這個公開 repo
 characters/*/private/
+private/
+nightline-private/
+# 機密
+.env
+.env.*
+*.pem
+*.key

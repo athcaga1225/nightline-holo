@@ -1,0 +1,17 @@
+{
+  "_note": "公開的角色基本介紹（與網站人物資料面板相同）。完整人格、語言規則與 System Prompt 只存在私人後端。",
+  "id": "judy",
+  "name": "茱蒂・艾法瑞茲",
+  "en": "JUDY ALVAREZ",
+  "role": "幻舞技師",
+  "base": "夜城",
+  "relationships": [
+    "friend",
+    "lover"
+  ],
+  "timelines": [
+    "working_at_lizzie",
+    "left_lizzie",
+    "left_night_city"
+  ]
+}

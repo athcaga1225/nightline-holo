@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "原作語料索引（公開版，不含原文）",
+  "type": "object",
+  "properties": {
+    "dialogues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string"
+          },
+          "temporary_state": {
+            "enum": [
+              "sober",
+              "intoxicated",
+              "hungover"
+            ]
+          },
+          "use_as_default_style": {
+            "type": "boolean"
+          },
+          "canonical": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NIGHTLINE 聊天訊息",
+  "type": "object",
+  "required": [
+    "from",
+    "text",
+    "t"
+  ],
+  "properties": {
+    "from": {
+      "enum": [
+        "v",
+        "n",
+        "sys"
+      ]
+    },
+    "text": {
+      "type": "string"
+    },
+    "t": {
+      "type": "number",
+      "description": "實際送出時間（Unix ms）"
+    },
+    "src": {
+      "enum": [
+        "proactive"
+      ]
+    },
+    "trigger": {
+      "type": "string"
+    },
+    "phase": {
+      "enum": [
+        "on_open",
+        "while_open",
+        "background"
+      ]
+    },
+    "genAt": {
+      "type": "number",
+      "description": "實際產生時間"
+    },
+    "eventAt": {
+      "type": "number",
+      "description": "虛構生活事件時間"
+    }
+  }
+}
