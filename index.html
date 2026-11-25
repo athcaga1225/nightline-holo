@@ -115,6 +115,14 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .opt::after{content:"⏎";position:absolute;right:-29px;top:calc(50% - 14px);width:22px;height:22px;border-radius:50%;background:#bfe9ea;color:#0b1a1c;
   font:600 12px/22px Rajdhani,sans-serif;text-align:center;opacity:0;transition:opacity .12s}
 .opt:hover::after,.opt:focus-visible::after{opacity:1}
+.sbar{grid-column:2;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 10px;padding:8px 10px;border-left:2px solid var(--red);background:rgba(217,70,78,.1);font-size:13px;color:#f1d4d4}
+.sbar[hidden]{display:none}
+.sbar .msg{flex:1 1 220px}.sbar .msg b{color:var(--red);font-weight:700;margin-right:8px}
+.sbar .btn{height:30px;padding:0 12px;font-size:13px}
+.sbar.ok{border-left-color:var(--npc);background:rgba(88,194,192,.08);color:#cfe4e2}
+.stamp .bad{margin-left:6px;color:var(--red)}
+.day.more::before,.day.more::after{display:none}.day.more{justify-content:center;color:var(--mute)}
+.pf .note2{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--mute);font-weight:400}
 .sysm{margin:14px 0;text-align:center;font-size:12px;color:var(--red)}
 .dots{position:relative;display:flex;gap:4px;padding:6px 2px 3px}
 .dots i{width:5px;height:5px;background:var(--t-n);opacity:.3;animation:bl 1.1s infinite}
@@ -129,6 +137,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 
 /* ---------- 輸入區 ---------- */
 .comp{display:grid;grid-template-columns:var(--gut) minmax(0,1fr);padding-top:12px;flex:none}
+.comp>.box{grid-column:2}
 .box{position:relative;display:flex;align-items:flex-end;gap:10px;padding:7px 8px 12px 13px;min-height:48px}
 .box>svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
 .box>svg path{stroke:rgba(78,153,126,.42);fill:rgba(8,18,17,.55);transition:stroke .15s,fill .15s}
@@ -250,6 +259,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
 
     <div class="comp">
       <div></div>
+      <div class="sbar" id="sbar" role="alert" hidden></div>
       <form class="box" id="box" autocomplete="off">
         <svg aria-hidden="true"><path stroke-width="1.5" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg>
         <label class="sr" for="ta">以 V 的身分輸入訊息</label>
@@ -278,6 +288,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   </aside>
 </div>
 
+<input type="file" id="imp" accept="application/json,.json" hidden>
 <div class="dlg" id="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgT">
   <div class="card">
     <h3 id="dlgT">重設對話？</h3>
@@ -340,148 +351,203 @@ const C={
       tired:["累了就睡。喔對，那也算我的時間","你的身體，你自己顧好"],
       any:["你傳訊息給我？我就在你腦袋裡，天才","嘖。隨便你","這城市需要的是一把火，不是更多廢話","說得好像你有得選一樣","行，這次算你對。只有這次","哼。繼續講，我在聽","冷靜點，你心跳吵死了"]}}
 };
-const ORDER=["judy","panam","johnny"],KEY="nightline-holo-v1";
+const ORDER=["judy","panam","johnny"];
+const LEGACY_KEY="nightline-holo-v1";          /* 舊版 localStorage 紀錄：只讀取、不刪除 */
+const PAGE=50;                                  /* 開啟聊天室先載入的訊息數，往上捲動每次再載入同樣數量 */
 const $=id=>document.getElementById(id);
 const log=$("log"),ta=$("ta"),sendB=$("send"),box=$("box"),sheet=$("sheet"),scrim=$("scrim"),dlg=$("dlg");
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const R=Math.random,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-function seedOf(id,now=Date.now()){
-  return {log:C[id].seed.map(([m,f,t],i)=>({id:"s"+i,from:f,text:t,t:now+m*60000})),draft:"",unread:0};
+/* ============================================================
+   1. 角色人格資料（Persona）
+   來源是上方的 C；這裡只整理成 AI 與介面都能用的固定格式。
+   模擬台詞（pool）屬於 MockProvider，不放進人格資料。
+   ============================================================ */
+const defaultMode=id=>C[id].lover?"lover":"friend";
+function personaOf(id,mode){
+  const c=C[id],m=c.lover&&mode==="lover"?"lover":"friend";
+  return {id,name:c.name,en:c.en,role:c.role,base:c.base,relationship:m,rel:m==="lover"?c.lover.rel:c.rel,
+    traits:c.t.map(([k,v])=>({k,v}))};
 }
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.c&&ORDER.every(k=>s.c[k]))return s}catch(e){}return null}
-let S=load();
-if(!S){const n=Date.now();S={active:"judy",c:{}};ORDER.forEach(k=>S.c[k]=seedOf(k,n));}
-const oldJudySeed = S.c.judy.log.find(message =>
-  message.id === "s1" && message.from === "n" && message.text === "我把上次那段超夢修好了，畫面乾淨很多"
-);
-if (oldJudySeed) {
-  oldJudySeed.text = "上次那段幻舞我修好了，畫面乾淨多了。";
-  save();
-}
-if(!C[S.active])S.active="judy";
-ORDER.forEach(k=>{if(C[k].lover&&!S.c[k].mode)S.c[k].mode="lover"});
-const relOf=id=>C[id].lover&&S.c[id].mode==="lover"?C[id].lover.rel:C[id].rel;
-let saveT;function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function saveSoon(){clearTimeout(saveT);saveT=setTimeout(save,300)}
 
-const typing={},pend={},scrollPos={};
-let newCount=0,sheetMode="contacts";
+/* ============================================================
+   2. 儲存層（ChatStore）
+   介面只透過下列方法存取資料。之後改接 Supabase 等雲端資料庫，
+   只要提供同名、同回傳格式的實作，再把 createStore() 換掉即可。
 
-/* ---- 時間 ---- */
-const p2=n=>String(n).padStart(2,"0");
-const hm=t=>{const d=new Date(t);return p2(d.getHours())+":"+p2(d.getMinutes())};
-const dayKey=t=>new Date(t).toDateString();
-function dayLabel(t){const d=new Date(t),n=new Date();const y=new Date(n);y.setDate(n.getDate()-1);
-  if(d.toDateString()===n.toDateString())return"今天";if(d.toDateString()===y.toDateString())return"昨天";
-  return (d.getMonth()+1)+"月"+d.getDate()+"日"}
+   open()                              開啟資料庫
+   getMeta(key) / putMeta(key, value)  系統資料（目前聊天室、遷移紀錄）
+   getSettings(id) / putSettings(rec)  每位 NPC 的設定：草稿、未讀、關係、待選回覆
+   addMessages(id, msgs)               新增訊息；seq 在該 NPC 內遞增，回傳附 seq 的訊息
+   latest(id, n) / before(id, seq, n)  分頁讀取（由舊到新排序）
+   count(id) / dumpContact(id)         筆數／全部訊息（匯出用）
+   clearContact(id, settings)          清除該 NPC 的訊息與 AI 資料，寫入新的設定
+   mergeContacts(plan)                 單一交易合併多位 NPC 的訊息與設定，重複的略過；
+                                       任何一步失敗就整筆不寫入（遷移、匯入用）
+   getSummary(id) / putSummary(id, s)  歷史摘要（預留給 AI，現在不寫入）
+   listMemories(id) / putMemory(id, m) 長期記憶（預留給 AI，現在不寫入）
 
-/* ---- 框形：細線 SVG，切角與尾角線寬一致 ---- */
-const O=.5; /* 尾角高度 TD 已含在 .bub 下內距（3 + 5） */
-function shape(kind,w,h){
-  if(kind==="box"){const c=9;return `M${O} ${O}H${w-O}V${h-c}L${w-c} ${h-O}H${O}Z`}
-  /* NPC：左上切角、右下切角、左下箭頭尾角；V 左右鏡像 */
-  const C=7,TD=5,TW=8,hb=h-O-TD;
-  if(kind==="n")return `M${C} ${O}H${w-O}V${hb-C}L${w-O-C} ${hb}H${O+TW}L${O} ${h-O}V${C}Z`;
-  return `M${O} ${O}H${w-C}L${w-O} ${C}V${h-O}L${w-O-TW} ${hb}H${O+C}L${O} ${hb-C}Z`;
-}
-function draw(el){
-  const w=el.offsetWidth,h=el.offsetHeight;if(!w||!h)return;
-  const s=el.querySelector(":scope>svg");s.setAttribute("width",w);s.setAttribute("height",h);s.setAttribute("viewBox",`0 0 ${w} ${h}`);
-  s.firstElementChild.setAttribute("d",shape(el.dataset.k,w,h));
-}
-const ro=new ResizeObserver(es=>es.forEach(e=>draw(e.target)));
-const roBox=new ResizeObserver(()=>draw(box));box.dataset.k="v";roBox.observe(box);
+   訊息格式：{ contactId, seq, from: "v" | "n" | "sys", text, t }
+   每位 NPC 的訊息以 [contactId, seq] 為主鍵，各自占一段獨立的鍵範圍；
+   清除、分頁、匯出都只作用在該 NPC 的範圍內。不設數量上限，也不會自動刪除。
+   ============================================================ */
+const DB_NAME="nightline-holo",DB_VER=1;
+const reqP=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const txDone=t=>new Promise((res,rej)=>{t.oncomplete=()=>res();t.onerror=()=>rej(t.error||new Error("寫入失敗"));
+  t.onabort=()=>rej(t.error||new DOMException("寫入已中止","AbortError"))});
+const krange=id=>IDBKeyRange.bound([id],[id,[]]);            /* [id, 任何值] 的完整範圍 */
+const msgKey=m=>m.from+"\u0001"+m.t+"\u0001"+m.text;          /* 判斷重複：同發話者、同時間、同內容 */
+const cleanMsg=m=>({from:m.from,text:m.text,t:m.t});
+function sortChrono(list){return list.map((m,i)=>[m,i]).sort((a,b)=>a[0].t-b[0].t||a[1]-b[1]).map(x=>x[0])}
 
-function bub(kind,inner){
-  const col=kind==="n"?"var(--e-n)":"var(--e-v)",bg=kind==="n"?"var(--f-n)":"var(--f-v)";
-  return `<div class="bub" data-k="${kind}"><svg aria-hidden="true"><path fill="${bg}" stroke="${col}" stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg>${inner}</div>`;
+function IndexedDBStore(){
+  let db;
+  const T=(names,mode="readonly")=>db.transaction(names,mode);
+  const cursorList=(st,range,dir,n)=>new Promise((res,rej)=>{const out=[],r=st.openCursor(range,dir);
+    r.onsuccess=()=>{const c=r.result;if(!c||out.length>=n)return res(out);out.push(c.value);c.continue()};r.onerror=()=>rej(r.error)});
+  return {
+    kind:"IndexedDB",
+    async open(){
+      if(!window.indexedDB)throw new Error("這個瀏覽器不支援 IndexedDB");
+      db=await new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);
+        r.onupgradeneeded=()=>{const d=r.result,has=n=>d.objectStoreNames.contains(n);
+          if(!has("messages"))d.createObjectStore("messages",{keyPath:["contactId","seq"]});
+          if(!has("settings"))d.createObjectStore("settings",{keyPath:"id"});
+          if(!has("meta"))d.createObjectStore("meta",{keyPath:"key"});
+          if(!has("summaries"))d.createObjectStore("summaries",{keyPath:"contactId"});
+          if(!has("memories"))d.createObjectStore("memories",{keyPath:["contactId","id"]})};
+        r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);
+        r.onblocked=()=>rej(new Error("資料庫正被其他分頁使用，請關閉其他 NIGHTLINE 分頁後重新整理"))});
+      db.onversionchange=()=>{db.close();this.onlost&&this.onlost(new Error("資料庫已在其他分頁更新，請重新整理"))};
+      db.onclose=()=>{this.onlost&&this.onlost(new Error("瀏覽器關閉了資料庫連線，請重新整理"))};
+    },
+    async getMeta(k){const r=await reqP(T("meta").objectStore("meta").get(k));return r?r.value:undefined},
+    async putMeta(k,v){const t=T("meta","readwrite");t.objectStore("meta").put({key:k,value:v});await txDone(t)},
+    async getSettings(id){return (await reqP(T("settings").objectStore("settings").get(id)))||null},
+    async putSettings(rec){const t=T("settings","readwrite");t.objectStore("settings").put(rec);await txDone(t)},
+    async addMessages(id,msgs){
+      const t=T("messages","readwrite"),st=t.objectStore("messages");
+      const last=await cursorList(st,krange(id),"prev",1);let seq=last.length?last[0].seq:0;
+      const out=msgs.map(m=>({contactId:id,seq:++seq,...cleanMsg(m)}));out.forEach(m=>st.add(m));
+      await txDone(t);return out},
+    async latest(id,n){return (await cursorList(T("messages").objectStore("messages"),krange(id),"prev",n)).reverse()},
+    async before(id,seq,n){return (await cursorList(T("messages").objectStore("messages"),IDBKeyRange.bound([id],[id,seq],false,true),"prev",n)).reverse()},
+    async count(id){return reqP(T("messages").objectStore("messages").count(krange(id)))},
+    async dumpContact(id){return reqP(T("messages").objectStore("messages").getAll(krange(id)))},
+    async clearContact(id,settings){
+      const t=T(["messages","settings","summaries","memories"],"readwrite");
+      t.objectStore("messages").delete(krange(id));t.objectStore("summaries").delete(id);
+      t.objectStore("memories").delete(krange(id));t.objectStore("settings").put(settings);await txDone(t)},
+    async mergeContacts(plan){
+      const t=T(["messages","settings"],"readwrite"),st=t.objectStore("messages"),ss=t.objectStore("settings"),result=[];
+      for(const p of plan){
+        const existing=await reqP(st.getAll(krange(p.id))),seen=new Set(existing.map(msgKey)),fresh=[];let skipped=0;
+        for(const m of p.messages){const k=msgKey(m);if(seen.has(k)){skipped++;continue}seen.add(k);fresh.push(cleanMsg(m))}
+        if(fresh.length){
+          /* 依時間重新排序後整段寫回，舊訊息插在正確位置 */
+          const all=sortChrono([...existing.map(cleanMsg),...fresh]);
+          st.delete(krange(p.id));all.forEach((m,i)=>st.add({contactId:p.id,seq:i+1,...m}));
+        }
+        if(p.settings)ss.put(p.settings);
+        result.push({id:p.id,added:fresh.length,skipped,total:existing.length+fresh.length});
+      }
+      await txDone(t);return result},
+    async getSummary(id){return (await reqP(T("summaries").objectStore("summaries").get(id)))||null},
+    async putSummary(id,s){const t=T("summaries","readwrite");t.objectStore("summaries").put({...s,contactId:id});await txDone(t)},
+    async listMemories(id){return reqP(T("memories").objectStore("memories").getAll(krange(id)))},
+    async putMemory(id,m){const t=T("memories","readwrite");t.objectStore("memories").put({...m,contactId:id});await txDone(t)},
+  };
 }
-const judyAvatar = "data:image/webp;base64,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";
-function cardHTML(id){const c=C[id];return `<div class="idc${id==="judy"?" judy-card":""}" aria-hidden="true"><i></i><b data-code="${esc(c.code)}">${id==="judy"?`<img class="judy-avatar" src="${judyAvatar}" alt="">`:esc(c.g)}</b></div>`}
 
-/* ---- 繪製 ---- */
-function renderLog(){
-  const id=S.active,L=S.c[id].log;let h="",prev=null,grp=[];
-  const flush=()=>{if(!grp.length)return;const f=grp[0].from;
-    h+=`<div class="grp ${f==="v"?"v":"n"}">`+grp.map(m=>bub(f==="v"?"v":"n",`<span class="tx">${esc(m.text)}</span>`)).join("")
-      +`<div class="stamp en">${hm(grp[grp.length-1].t)}</div></div>`;grp=[]};
-  L.forEach(m=>{
-    if(m.from==="sys"){flush();h+=`<div class="sysm" role="status">${esc(m.text)}</div>`;prev=m;return}
-    if(!prev||dayKey(prev.t)!==dayKey(m.t)){flush();h+=`<div class="day">${dayLabel(m.t)}</div>`}
-    else if(prev.from!==m.from||m.t-prev.t>6*60000)flush();
-    grp.push(m);prev=m});
-  flush();
-  if(typing[id]){const join=prev&&prev.from==="n";
-    h+=`<div class="grp n${join?" join":""}">`+bub("n",`<span class="dots"><i></i><i></i><i></i></span><span class="sr">${esc(C[id].short)} 輸入中</span>`)+`</div>`}
-  const ch=!typing[id]&&S.c[id].choices;
-  if(ch&&ch.length)h+=`<div class="choices" role="group" aria-label="快速回覆"><span class="lead">選一個回覆，或直接輸入</span>`+
-    ch.map((t,i)=>`<button class="opt" data-k="v" data-i="${i}"><svg aria-hidden="true"><path stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg><span class="tx">${esc(t)}</span></button>`).join("")+`</div>`;
-  ro.disconnect();log.innerHTML=h;log.querySelectorAll(".bub,.opt").forEach(b=>{draw(b);ro.observe(b)});
+/* IndexedDB 無法使用時的備援：同樣介面，只存在記憶體，關閉頁面就消失（會明確提示） */
+function MemoryStore(){
+  const meta=new Map(),settings=new Map(),msgs=new Map(),sums=new Map(),mems=new Map();
+  const L=id=>{if(!msgs.has(id))msgs.set(id,[]);return msgs.get(id)};
+  return {
+    kind:"記憶體（不會保存）",async open(){},
+    async getMeta(k){return meta.get(k)},async putMeta(k,v){meta.set(k,v)},
+    async getSettings(id){return settings.get(id)||null},async putSettings(r){settings.set(r.id,{...r})},
+    async addMessages(id,list){const a=L(id);let seq=a.length?a[a.length-1].seq:0;const out=list.map(m=>({contactId:id,seq:++seq,...cleanMsg(m)}));a.push(...out);return out},
+    async latest(id,n){return L(id).slice(-n)},
+    async before(id,seq,n){const a=L(id).filter(m=>m.seq<seq);return a.slice(-n)},
+    async count(id){return L(id).length},async dumpContact(id){return L(id).slice()},
+    async clearContact(id,s){msgs.set(id,[]);sums.delete(id);mems.delete(id);settings.set(id,{...s})},
+    async mergeContacts(plan){return plan.map(p=>{const a=L(p.id),seen=new Set(a.map(msgKey)),fresh=[];let skipped=0;
+      for(const m of p.messages){const k=msgKey(m);if(seen.has(k)){skipped++;continue}seen.add(k);fresh.push(cleanMsg(m))}
+      const all=sortChrono([...a.map(cleanMsg),...fresh]);msgs.set(p.id,all.map((m,i)=>({contactId:p.id,seq:i+1,...m})));
+      if(p.settings)settings.set(p.id,{...p.settings});return {id:p.id,added:fresh.length,skipped,total:all.length}})},
+    async getSummary(id){return sums.get(id)||null},async putSummary(id,s){sums.set(id,{...s,contactId:id})},
+    async listMemories(id){return (mems.get(id)||[]).slice()},async putMemory(id,m){if(!mems.has(id))mems.set(id,[]);mems.get(id).push({...m,contactId:id})},
+  };
 }
-function renderHead(){
-  const c=C[S.active];
-  $("idcard").innerHTML=cardHTML(S.active);
-  const others=ORDER.some(k=>k!==S.active&&S.c[k].unread);
-  $("whoName").textContent=c.name;
-  const w=$("who");w.querySelector(".udot")?.remove();
-  if(others)w.insertAdjacentHTML("beforeend",'<span class="udot" title="其他聯絡人有新訊息"></span>');
-  $("sysEn").textContent=c.en+" · "+c.code;
-  const st=$("sysSt");st.textContent=typing[S.active]?"輸入中…":"LINK OK · MOCK";st.classList.toggle("on",!!typing[S.active]);
-  document.title=c.short+" — NIGHTLINE // HOLO";
-}
-function renderSheet(){
-  $("tC").setAttribute("aria-selected",sheetMode==="contacts");$("tI").setAttribute("aria-selected",sheetMode==="profile");
-  const b=$("shb");
-  if(sheetMode==="contacts"){
-    b.innerHTML=ORDER.map(k=>{const c=C[k],st=S.c[k],last=st.log[st.log.length-1];
-      const pv=typing[k]?"輸入中…":st.draft?"草稿："+st.draft:last?(last.from==="v"?"你：":"")+last.text:"";
-      return `<button class="ct" data-id="${k}" aria-current="${k===S.active}">${cardHTML(k)}
-        <span class="nm">${esc(c.name)}</span><span class="tm en">${last?hm(last.t):""}</span>
-        <span class="pv">${esc(pv)}</span>${st.unread?`<span class="ub">${st.unread}</span>`:"<span></span>"}</button>`}).join("");
-  }else{
-    const c=C[S.active];
-    b.innerHTML=`<div class="pf">${cardHTML(S.active)}<h2>${esc(c.name)}</h2><div class="enn en">${esc(c.en)} · ${esc(c.code)}</div>
-      <dl><dt>身分</dt><dd>${esc(c.role)}</dd><dt>所在</dt><dd>${esc(c.base)}</dd><dt>與 V</dt><dd>${c.lover?`<div class="seg" role="group" aria-label="與 V 的關係">${[["friend","朋友"],["lover","戀人"]].map(([v,l])=>`<button data-mode="${v}" aria-pressed="${(S.c[S.active].mode||"friend")===v}">${l}</button>`).join("")}</div>`:""}${esc(relOf(S.active))}</dd></dl>
-      <h3>基本設定</h3><dl>${c.t.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join("")}<dt>模式</dt><dd>模擬回覆（Mock Mode），未連接 AI</dd></dl>
-      <div class="act"><button class="btn" id="pfR">重設這段對話</button></div>
-      <p class="fan">NIGHTLINE // HOLO 為非官方粉絲作品，與 CD PROJEKT RED 無關。角色名稱權利屬原權利人，對話內容皆為原創模擬文字。</p></div>`;
-    $("pfR").onclick=askReset;
-    b.querySelectorAll(".seg button").forEach(x=>x.onclick=()=>{S.c[S.active].mode=x.dataset.mode;save();renderSheet()});
+
+/* ============================================================
+   3. 舊版 localStorage 遷移
+   - 舊資料只讀取、不修改也不刪除，另在 IndexedDB 備份一份原文。
+   - 先寫入、再逐一核對筆數，全部吻合才標記完成；中途失敗下次開啟會重試，
+     重複的訊息會被略過，不會寫兩次。
+   ============================================================ */
+const fixLegacyText=(id,m)=>id==="judy"&&m.id==="s1"&&m.from==="n"&&m.text==="我把上次那段超夢修好了，畫面乾淨很多"?{...m,text:"上次那段幻舞我修好了，畫面乾淨多了。"}:m;
+const validMsg=m=>m&&["v","n","sys"].includes(m.from)&&typeof m.text==="string"&&Number.isFinite(m.t);
+async function migrateLegacy(store){
+  const done=await store.getMeta("migration.localStorage.v1");
+  if(done&&done.status==="done")return {status:"already"};
+  let raw=null;try{raw=localStorage.getItem(LEGACY_KEY)}catch(e){}
+  if(!raw){await store.putMeta("migration.localStorage.v1",{status:"done",at:Date.now(),found:false});return {status:"none"}}
+  let data;try{data=JSON.parse(raw)}catch(e){throw new Error("舊版紀錄格式無法讀取，原資料已保留在瀏覽器中，沒有任何變更")}
+  await store.putMeta("legacy.localStorage.v1.raw",{savedAt:Date.now(),raw});
+  const plan=[],expect={};
+  for(const id of ORDER){
+    const c=data&&data.c&&data.c[id];if(!c)continue;
+    const list=(Array.isArray(c.log)?c.log:[]).map(m=>fixLegacyText(id,m)).filter(validMsg);
+    expect[id]=new Set(list.map(msgKey)).size;
+    plan.push({id,messages:list,settings:{id,draft:typeof c.draft==="string"?c.draft:"",unread:Number(c.unread)||0,
+      mode:c.mode==="friend"||c.mode==="lover"?c.mode:defaultMode(id),choices:Array.isArray(c.choices)?c.choices.map(String).slice(0,3):null,seeded:true}});
   }
+  const result=await store.mergeContacts(plan);
+  for(const id of Object.keys(expect)){const n=await store.count(id);
+    if(n<expect[id])throw new Error(`遷移核對失敗：${C[id].short}應有 ${expect[id]} 則，只找到 ${n} 則。原資料仍保留，下次開啟會再試一次`)}
+  if(data&&C[data.active])await store.putMeta("app",{active:data.active});
+  await store.putMeta("migration.localStorage.v1",{status:"done",at:Date.now(),found:true,result});
+  return {status:"migrated",result};
 }
 
-/* ---- 捲動 ---- */
-const nearBottom=()=>log.scrollHeight-log.scrollTop-log.clientHeight<56;
-const toBottom=()=>{log.scrollTop=log.scrollHeight;newCount=0;updJump()};
-function updJump(){const j=$("jump"),far=log.scrollHeight-log.scrollTop-log.clientHeight>240;
-  j.classList.toggle("on",newCount>0||far);$("jumpTx").textContent=newCount?`${newCount} 則新訊息`:"回到最新訊息"}
-/* 停在最底時，版面變矮（手機鍵盤展開、視窗縮放）仍黏在最新訊息；往上讀時不動 */
-let stick=true;
-log.addEventListener("scroll",()=>{stick=nearBottom();if(stick)newCount=0;updJump()},{passive:true});
-const roLog=new ResizeObserver(()=>{if(stick)log.scrollTop=log.scrollHeight});roLog.observe(log);
-$("jump").onclick=()=>log.scrollTo({top:log.scrollHeight,behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});
-function refresh(isMsg){const near=nearBottom(),top=log.scrollTop;renderLog();renderHead();
-  if(near)toBottom();else{log.scrollTop=top;if(isMsg)newCount++;updJump()}}
+/* ============================================================
+   4. AI Context（與完整聊天紀錄分開）
+   完整紀錄全部留在儲存層；送給 AI 的只有下面組出來的 context：
+     persona   角色人格（固定資料）
+     recent    近期對話（最新 AI_CONTEXT.recent 則）
+     summary   歷史摘要（之後由真實 AI 產生後寫入；目前為 null）
+     memories  長期記憶（之後由真實 AI 擷取後寫入；目前為 []）
+   未串接真實 AI 前，不產生、不寫入任何摘要或記憶。
+   ============================================================ */
+const AI_CONTEXT={recent:20};
+async function buildContext(id){
+  const [recent,summary,memories]=await Promise.all([store.latest(id,AI_CONTEXT.recent),store.getSummary(id),store.listMemories(id)]);
+  return {persona:personaOf(id,set[id].mode),
+    recent:recent.filter(m=>m.from!=="sys").map(m=>({role:m.from==="v"?"user":"assistant",text:m.text,t:m.t})),
+    summary,memories};
+}
 
-/* ==== 回覆來源 ============================================
-   介面只負責：送出 → 顯示輸入中 → 顯示回覆。
-   回覆內容一律由 replyProvider 提供，之後換成後端 API 只需改這一段。
-   約定：replyProvider.reply(req) → Promise<string[]>（一則或多則回覆）
-     req = { contactId, profile:{name,role,rel,traits}, text, history:[{role:"user"|"assistant", text, t}] }
-   失敗時丟出錯誤，介面會在聊天室顯示「訊號中斷」，不寫入角色台詞。
-   ========================================================== */
+/* ============================================================
+   5. 回覆來源（replyProvider）
+   replyProvider.reply({ contactId, text, context }) →
+     Promise<string[]> 或 Promise<{ messages: string[], choices?: string[] }>
+   失敗時丟出錯誤，聊天室會顯示「訊號中斷」。
+   ============================================================ */
 const MockProvider={
   name:"mock",
-  async reply({contactId,text,history}){
+  async reply({contactId,text,context}){
     await sleep(700+R()*900);                       /* 模擬網路與思考時間 */
-    const {messages,k}=mockCompose(contactId,text,history);
-    return {messages,choices:mockChoices(contactId,k)};
+    const mode=context.persona.relationship;
+    const {messages,k}=mockCompose(contactId,text,context.recent,mode);
+    return {messages,choices:mockChoices(contactId,k,mode)};
   }
 };
 /* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
-function mockCompose(id,text,history){
-  const lv=C[id].lover&&S.c[id].mode==="lover"?C[id].lover.pool:null,p=lv?{...C[id].pool,...lv}:C[id].pool,lastNpc=[...history].reverse().find(m=>m.role==="assistant");
+function mockCompose(id,text,recent,mode){
+  const lv=C[id].lover&&mode==="lover"?C[id].lover.pool:null,p=lv?{...C[id].pool,...lv}:C[id].pool,lastNpc=[...recent].reverse().find(m=>m.role==="assistant");
   const rules=[
     ["bye",/晚安|睡了|掰|拜拜|先這樣|下次聊|先下線/],
     ["love",/愛你|想你|喜歡你|抱抱|親親/],
@@ -520,9 +586,9 @@ const CHOICES={
       work:["弄好給我看看","別熬夜剪片","需要幫忙就說"],
       bye:["晚安","明天見","改天請你喝一杯"],
       any:["哈，真的假的","然後呢？","我晚點打給你"]}}};
-let lastChoiceTurn={};
-function mockChoices(id,k){
-  const bank=CHOICES[id]&&CHOICES[id][S.c[id].mode==="lover"?"lover":"friend"];
+const lastChoiceTurn={};
+function mockChoices(id,k,mode){
+  const bank=CHOICES[id]&&CHOICES[id][mode==="lover"?"lover":"friend"];
   if(!bank||lastChoiceTurn[id]||R()>.4){lastChoiceTurn[id]=false;return null}
   lastChoiceTurn[id]=true;return (bank[k]||bank.any).slice();
 }
@@ -533,61 +599,226 @@ const ApiProvider={name:"api",async reply(req){
 */
 let replyProvider=MockProvider;
 
-/* ---- 聊天流程（與回覆來源無關） ---- */
-const queue={};
-function setTyping(id,v){typing[id]=v;renderHead();if(id===S.active)refresh(false);if(sheet.classList.contains("open"))renderSheet()}
-function deliver(id,text,from="n"){S.c[id].log.push({id:"m"+Date.now()+R(),from,text,t:Date.now()});
-  if(id!==S.active&&from==="n")S.c[id].unread++;save();
-  if(id===S.active)refresh(from==="n");else renderHead();if(sheet.classList.contains("open"))renderSheet()}
-function toHistory(L){return L.filter(m=>m.from!=="sys").map(m=>({role:m.from==="v"?"user":"assistant",text:m.text,t:m.t}))}
+/* ============================================================
+   6. 介面狀態（只放畫面需要的東西，資料本體在儲存層）
+   ============================================================ */
+let store=null;
+const app={active:"judy"};
+const set={};          /* 每位 NPC 的設定（草稿、未讀、關係、待選回覆），與儲存層同步 */
+const win={};          /* 每位 NPC 目前載入到畫面的訊息視窗 */
+const lastMsg={};      /* 聯絡人列表預覽用的最後一則 */
+const epoch={};        /* 重設時遞增，讓進行中的回覆作廢 */
+const typing={},pend={},scrollPos={},queue={};
+let newCount=0,sheetMode="contacts",ready=false;
+ORDER.forEach(id=>{set[id]={id,draft:"",unread:0,mode:defaultMode(id),choices:null,seeded:false};
+  win[id]={msgs:[],hasMore:false,loading:false,loaded:false};lastMsg[id]=null;epoch[id]=0});
+const relOf=id=>personaOf(id,set[id].mode).rel;
+
+/* ---- 儲存錯誤：顯示在輸入框上方，必須處理（重試或匯出）才會消失 ---- */
+const failures=[];let fatalErr=null;
+function why(e){if(!e)return"未知錯誤";if(e.name==="QuotaExceededError")return"裝置的儲存空間不足";return e.message||e.name||String(e)}
+function fail(key,label,err,retry){const i=failures.findIndex(f=>f.key===key);const f={key,label,err,retry};
+  if(i>=0)failures[i]=f;else failures.push(f);console.error("[NIGHTLINE] 儲存失敗："+label,err);renderSbar()}
+function renderSbar(note,noteErr){
+  const b=$("sbar");
+  if(fatalErr){b.hidden=false;b.className="sbar";b.innerHTML=`<span class="msg"><b>無法保存紀錄</b>${esc(why(fatalErr))}。這次的對話只會留在畫面上，關閉後就會消失；需要的話請先匯出。</span><button class="btn" data-act="export">匯出紀錄</button>`;return}
+  if(failures.length){const f=failures[failures.length-1];b.hidden=false;b.className="sbar";
+    b.innerHTML=`<span class="msg"><b>儲存失敗</b>${failures.length>1?`有 ${failures.length} 項資料沒有成功存取`:esc(f.label)}（${esc(why(f.err))}）</span><button class="btn pri" data-act="retry">重試</button><button class="btn" data-act="export">匯出紀錄</button>`;return}
+  if(note){b.hidden=false;b.className=noteErr?"sbar":"sbar ok";b.innerHTML=`<span class="msg">${esc(note)}</span>`;clearTimeout(renderSbar.t);renderSbar.t=setTimeout(()=>{if(!failures.length&&!fatalErr)b.hidden=true},noteErr?8000:4000);return}
+  b.hidden=true;b.innerHTML="";
+}
+async function retryAll(){const list=failures.splice(0);renderSbar();let bad=0;
+  for(const f of list){try{await f.retry()}catch(e){bad++;fail(f.key,f.label,e,f.retry)}}
+  if(!bad)renderSbar("已重新儲存");}
+$("sbar").addEventListener("click",e=>{const a=e.target.closest("[data-act]");if(!a)return;if(a.dataset.act==="retry")retryAll();else exportAll()});
+
+/* ---- 寫入（全部經過這裡，錯誤一律回報） ---- */
+function saveSettings(id){const snap={...set[id]};return store.putSettings(snap).catch(e=>fail("set:"+id,`${C[id].short}的設定（草稿、未讀、關係）沒有存進本機`,e,()=>store.putSettings({...set[id]})))}
+const setTimers={};
+function saveSettingsSoon(id){clearTimeout(setTimers[id]);setTimers[id]=setTimeout(()=>saveSettings(id),300)}
+function saveApp(){store.putMeta("app",{active:app.active}).catch(e=>fail("app","目前所在的聊天室沒有存進本機",e,()=>store.putMeta("app",{active:app.active})))}
+function persistMsg(id,m){
+  const ep=epoch[id];
+  return store.addMessages(id,[m]).then(([saved])=>{if(epoch[id]!==ep)return;m.seq=saved.seq;
+      if(m.failed){delete m.failed;if(id===app.active)refresh(false)}})
+    .catch(e=>{if(epoch[id]!==ep)return;m.failed=true;if(id===app.active)refresh(false);
+      fail("msg:"+id+":"+m.t+":"+m.text.length,`一則${m.from==="v"?"你傳給":"來自"}${C[id].short}的訊息沒有存進本機`,e,()=>persistMsg(id,m).then(()=>{if(m.failed)throw new Error("仍無法寫入")}))});
+}
+
+/* ---- 時間 ---- */
+const p2=n=>String(n).padStart(2,"0");
+const hm=t=>{const d=new Date(t);return p2(d.getHours())+":"+p2(d.getMinutes())};
+const dayKey=t=>new Date(t).toDateString();
+function dayLabel(t){const d=new Date(t),n=new Date();const y=new Date(n);y.setDate(n.getDate()-1);
+  if(d.toDateString()===n.toDateString())return"今天";if(d.toDateString()===y.toDateString())return"昨天";
+  return (d.getMonth()+1)+"月"+d.getDate()+"日"}
+
+/* ---- 框形：細線 SVG，切角與尾角線寬一致 ---- */
+const O=.5; /* 尾角高度 TD 已含在 .bub 下內距（3 + 5） */
+function shape(kind,w,h){
+  if(kind==="box"){const c=9;return `M${O} ${O}H${w-O}V${h-c}L${w-c} ${h-O}H${O}Z`}
+  /* NPC：左上切角、右下切角、左下箭頭尾角；V 左右鏡像 */
+  const C=7,TD=5,TW=8,hb=h-O-TD;
+  if(kind==="n")return `M${C} ${O}H${w-O}V${hb-C}L${w-O-C} ${hb}H${O+TW}L${O} ${h-O}V${C}Z`;
+  return `M${O} ${O}H${w-C}L${w-O} ${C}V${h-O}L${w-O-TW} ${hb}H${O+C}L${O} ${hb-C}Z`;
+}
+function draw(el){
+  const w=el.offsetWidth,h=el.offsetHeight;if(!w||!h)return;
+  const s=el.querySelector(":scope>svg");s.setAttribute("width",w);s.setAttribute("height",h);s.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  s.firstElementChild.setAttribute("d",shape(el.dataset.k,w,h));
+}
+const ro=new ResizeObserver(es=>es.forEach(e=>draw(e.target)));
+const roBox=new ResizeObserver(()=>draw(box));box.dataset.k="v";roBox.observe(box);
+
+function bub(kind,inner){
+  const col=kind==="n"?"var(--e-n)":"var(--e-v)",bg=kind==="n"?"var(--f-n)":"var(--f-v)";
+  return `<div class="bub" data-k="${kind}"><svg aria-hidden="true"><path fill="${bg}" stroke="${col}" stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg>${inner}</div>`;
+}
+const judyAvatar = "data:image/webp;base64,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";
+function cardHTML(id){const c=C[id];return `<div class="idc${id==="judy"?" judy-card":""}" aria-hidden="true"><i></i><b data-code="${esc(c.code)}">${id==="judy"?`<img class="judy-avatar" src="${judyAvatar}" alt="">`:esc(c.g)}</b></div>`}
+
+/* ---- 繪製 ---- */
+function renderLog(){
+  const id=app.active,W=win[id],L=W.msgs;let h="",prev=null,grp=[];
+  if(W.hasMore)h+=`<div class="day more">${W.loading?"載入更早的訊息…":"往上捲動載入更早的訊息"}</div>`;
+  const flush=()=>{if(!grp.length)return;const f=grp[0].from,bad=grp.some(m=>m.failed);
+    h+=`<div class="grp ${f==="v"?"v":"n"}">`+grp.map(m=>bub(f==="v"?"v":"n",`<span class="tx">${esc(m.text)}</span>`)).join("")
+      +`<div class="stamp en">${hm(grp[grp.length-1].t)}${bad?`<span class="bad">未儲存</span>`:""}</div></div>`;grp=[]};
+  L.forEach(m=>{
+    if(m.from==="sys"){flush();h+=`<div class="sysm" role="status">${esc(m.text)}</div>`;prev=m;return}
+    if(!prev||dayKey(prev.t)!==dayKey(m.t)){flush();h+=`<div class="day">${dayLabel(m.t)}</div>`}
+    else if(prev.from!==m.from||m.t-prev.t>6*60000)flush();
+    grp.push(m);prev=m});
+  flush();
+  if(typing[id]){const join=prev&&prev.from==="n";
+    h+=`<div class="grp n${join?" join":""}">`+bub("n",`<span class="dots"><i></i><i></i><i></i></span><span class="sr">${esc(C[id].short)} 輸入中</span>`)+`</div>`}
+  const ch=!typing[id]&&set[id].choices;
+  if(ch&&ch.length)h+=`<div class="choices" role="group" aria-label="快速回覆"><span class="lead">選一個回覆，或直接輸入</span>`+
+    ch.map((t,i)=>`<button class="opt" data-k="v" data-i="${i}"><svg aria-hidden="true"><path stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg><span class="tx">${esc(t)}</span></button>`).join("")+`</div>`;
+  ro.disconnect();log.innerHTML=h;log.querySelectorAll(".bub,.opt").forEach(b=>{draw(b);ro.observe(b)});
+}
+function renderHead(){
+  const c=C[app.active];
+  $("idcard").innerHTML=cardHTML(app.active);
+  const others=ORDER.some(k=>k!==app.active&&set[k].unread);
+  $("whoName").textContent=c.name;
+  const w=$("who");w.querySelector(".udot")?.remove();
+  if(others)w.insertAdjacentHTML("beforeend",'<span class="udot" title="其他聯絡人有新訊息"></span>');
+  $("sysEn").textContent=c.en+" · "+c.code;
+  const st=$("sysSt");st.textContent=typing[app.active]?"輸入中…":"LINK OK · MOCK";st.classList.toggle("on",!!typing[app.active]);
+  document.title=c.short+" — NIGHTLINE // HOLO";
+}
+function renderSheet(){
+  $("tC").setAttribute("aria-selected",sheetMode==="contacts");$("tI").setAttribute("aria-selected",sheetMode==="profile");
+  const b=$("shb");
+  if(sheetMode==="contacts"){
+    b.innerHTML=ORDER.map(k=>{const c=C[k],st=set[k],last=lastMsg[k];
+      const pv=typing[k]?"輸入中…":st.draft?"草稿："+st.draft:last?(last.from==="v"?"你：":"")+last.text:"";
+      return `<button class="ct" data-id="${k}" aria-current="${k===app.active}">${cardHTML(k)}
+        <span class="nm">${esc(c.name)}</span><span class="tm en">${last?hm(last.t):""}</span>
+        <span class="pv">${esc(pv)}</span>${st.unread?`<span class="ub">${st.unread}</span>`:"<span></span>"}</button>`}).join("");
+  }else{
+    const c=C[app.active];
+    b.innerHTML=`<div class="pf">${cardHTML(app.active)}<h2>${esc(c.name)}</h2><div class="enn en">${esc(c.en)} · ${esc(c.code)}</div>
+      <dl><dt>身分</dt><dd>${esc(c.role)}</dd><dt>所在</dt><dd>${esc(c.base)}</dd><dt>與 V</dt><dd>${c.lover?`<div class="seg" role="group" aria-label="與 V 的關係">${[["friend","朋友"],["lover","戀人"]].map(([v,l])=>`<button data-mode="${v}" aria-pressed="${set[app.active].mode===v}">${l}</button>`).join("")}</div>`:""}${esc(relOf(app.active))}</dd></dl>
+      <h3>基本設定</h3><dl>${c.t.map(([a,v])=>`<dt>${esc(a)}</dt><dd>${esc(v)}</dd>`).join("")}<dt>模式</dt><dd>模擬回覆（Mock Mode），未連接 AI</dd></dl>
+      <div class="act"><button class="btn" id="pfR">重設這段對話</button></div>
+      <h3>聊天紀錄</h3><p class="note2">紀錄存在這台裝置的瀏覽器資料庫（${esc(store?store.kind:"")}），不限數量、不會自動刪除。</p>
+      <div class="act"><button class="btn" id="pfE">匯出全部紀錄</button><button class="btn" id="pfI">匯入紀錄</button></div>
+      <p class="fan">NIGHTLINE // HOLO 為非官方粉絲作品，與 CD PROJEKT RED 無關。角色名稱權利屬原權利人，對話內容皆為原創模擬文字。</p></div>`;
+    $("pfR").onclick=askReset;$("pfE").onclick=exportAll;$("pfI").onclick=()=>$("imp").click();
+    b.querySelectorAll(".seg button").forEach(x=>x.onclick=()=>{set[app.active].mode=x.dataset.mode;saveSettings(app.active);renderSheet()});
+  }
+}
+
+/* ---- 捲動 ---- */
+const nearBottom=()=>log.scrollHeight-log.scrollTop-log.clientHeight<56;
+const toBottom=()=>{log.scrollTop=log.scrollHeight;newCount=0;updJump()};
+function updJump(){const j=$("jump"),far=log.scrollHeight-log.scrollTop-log.clientHeight>240;
+  j.classList.toggle("on",newCount>0||far);$("jumpTx").textContent=newCount?`${newCount} 則新訊息`:"回到最新訊息"}
+/* 停在最底時，版面變矮（手機鍵盤展開、視窗縮放）仍黏在最新訊息；往上讀時不動 */
+let stick=true;
+log.addEventListener("scroll",()=>{stick=nearBottom();if(stick)newCount=0;updJump();if(log.scrollTop<160)loadOlder()},{passive:true});
+const roLog=new ResizeObserver(()=>{if(stick)log.scrollTop=log.scrollHeight});roLog.observe(log);
+$("jump").onclick=()=>log.scrollTo({top:log.scrollHeight,behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"});
+function refresh(isMsg){const near=nearBottom(),top=log.scrollTop;renderLog();renderHead();
+  if(near)toBottom();else{log.scrollTop=top;if(isMsg)newCount++;updJump()}}
+
+/* ---- 分頁載入 ---- */
+async function openRoom(id){
+  const W=win[id];if(W.loaded)return;
+  try{const rows=await store.latest(id,PAGE);W.msgs=rows;W.hasMore=rows.length===PAGE&&(await store.count(id))>PAGE;W.loaded=true}
+  catch(e){W.loaded=false;fail("read:"+id,`${C[id].short}的紀錄讀取失敗`,e,()=>openRoom(id).then(()=>{if(app.active===id){renderLog();toBottom()}}));}
+}
+async function loadOlder(){
+  const id=app.active,W=win[id];if(!W.loaded||!W.hasMore||W.loading)return;
+  const firstSaved=W.msgs.find(m=>m.seq!=null);if(!firstSaved){W.hasMore=false;return}
+  W.loading=true;renderLog();const h0=log.scrollHeight,t0=log.scrollTop;
+  try{
+    const rows=await store.before(id,firstSaved.seq,PAGE);
+    if(app.active!==id||win[id]!==W){W.loading=false;return}
+    W.msgs=[...rows,...W.msgs];W.hasMore=rows.length===PAGE;
+  }catch(e){fail("read:"+id,`${C[id].short}較早的紀錄讀取失敗`,e,async()=>{})}
+  W.loading=false;
+  if(app.active===id){renderLog();log.scrollTop=t0+(log.scrollHeight-h0)}
+}
+
+/* ---- 聊天流程（與回覆來源、儲存方式無關） ---- */
+function addLocal(id,m){if(win[id].loaded)win[id].msgs.push(m);lastMsg[id]=m}
+function setTyping(id,v){typing[id]=v;renderHead();if(id===app.active)refresh(false);if(sheet.classList.contains("open"))renderSheet()}
+function deliver(id,text,from="n"){
+  const m={from,text,t:Date.now()};addLocal(id,m);persistMsg(id,m);
+  if(id!==app.active&&from==="n"){set[id].unread++;saveSettings(id)}
+  if(id===app.active)refresh(from==="n");else renderHead();if(sheet.classList.contains("open"))renderSheet()}
 /* 每個聊天室各自排隊，回覆一定回到發問的聊天室 */
 function requestReply(id,text){
-  pend[id]=(pend[id]||0)+1;
-  queue[id]=(queue[id]||Promise.resolve()).then(()=>runReply(id,text)).catch(()=>{}).then(()=>{
-    pend[id]--;if(!pend[id]&&typing[id])setTyping(id,false)});
+  pend[id]=(pend[id]||0)+1;const ep=epoch[id];
+  queue[id]=(queue[id]||Promise.resolve()).then(()=>runReply(id,text,ep)).catch(()=>{}).then(()=>{
+    if(epoch[id]!==ep)return;pend[id]--;if(!pend[id]&&typing[id])setTyping(id,false)});
 }
-async function runReply(id,text){
-  const room=S.c[id];                                /* 若中途重設，舊回覆作廢 */
-  await sleep(350);if(S.c[id]!==room)return;
+async function runReply(id,text,ep){
+  await sleep(350);if(epoch[id]!==ep)return;
   setTyping(id,true);
-  let msgs;
-  try{msgs=await replyProvider.reply({contactId:id,profile:{name:C[id].name,role:C[id].role,relationship:S.c[id].mode||"friend",rel:relOf(id),traits:C[id].t},text,history:toHistory(room.log)})}
-  catch(e){if(S.c[id]!==room)return;typing[id]=false;deliver(id,"訊號中斷，這則訊息沒有收到回覆。","sys");return}
-  if(S.c[id]!==room)return;
-  let choices=null;
-  if(msgs&&!Array.isArray(msgs)&&typeof msgs==="object"){choices=msgs.choices;msgs=msgs.messages}
+  let out;
+  try{const context=await buildContext(id);out=await replyProvider.reply({contactId:id,text,context})}
+  catch(e){if(epoch[id]!==ep)return;typing[id]=false;deliver(id,"訊號中斷，這則訊息沒有收到回覆。","sys");return}
+  if(epoch[id]!==ep)return;
+  let msgs=out,choices=null;
+  if(out&&!Array.isArray(out)&&typeof out==="object"){choices=out.choices;msgs=out.messages}
   msgs=(Array.isArray(msgs)?msgs:[msgs]).map(String).filter(m=>m.trim());
   choices=Array.isArray(choices)?choices.map(String).filter(c=>c.trim()).slice(0,3):null;
   for(let i=0;i<msgs.length;i++){
-    if(i>0){setTyping(id,true);await sleep(Math.min(1800,500+msgs[i].length*35));if(S.c[id]!==room)return}
+    if(i>0){setTyping(id,true);await sleep(Math.min(1800,500+msgs[i].length*35));if(epoch[id]!==ep)return}
     typing[id]=false;deliver(id,msgs[i]);
   }
-  if(choices&&choices.length&&pend[id]<=1){room.choices=choices;save();if(id===S.active)refresh(false)}
+  if(choices&&choices.length&&pend[id]<=1){set[id].choices=choices;saveSettings(id);if(id===app.active)refresh(false)}
 }
 
 /* ---- 輸入 ---- */
 let composing=false;
-function size(){ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,132)+"px";sendB.disabled=!ta.value.trim()}
+function size(){ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,132)+"px";sendB.disabled=!ready||!ta.value.trim()}
 ta.addEventListener("compositionstart",()=>composing=true);
 ta.addEventListener("compositionend",()=>setTimeout(()=>composing=false,0));
 ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){if(composing||e.isComposing||e.keyCode===229)return;e.preventDefault();send()}});
-ta.addEventListener("input",()=>{S.c[S.active].draft=ta.value;size();saveSoon()});
+ta.addEventListener("input",()=>{if(!ready)return;set[app.active].draft=ta.value;size();saveSettingsSoon(app.active)});
 ta.addEventListener("focus",()=>{box.classList.add("f");document.querySelector(".term").classList.add("typing-on")});
 ta.addEventListener("blur",()=>{box.classList.remove("f");document.querySelector(".term").classList.remove("typing-on")});
 box.addEventListener("submit",e=>{e.preventDefault();send();ta.focus()});
-function send(){const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
-  S.c[S.active].draft="";ta.value="";size();sendText(text)}
-function sendText(text){const id=S.active;S.c[id].choices=null;
-  S.c[id].log.push({id:"m"+Date.now(),from:"v",text,t:Date.now()});save();
+function send(){if(!ready)return;const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
+  set[app.active].draft="";ta.value="";size();sendText(text)}
+function sendText(text){const id=app.active;set[id].choices=null;saveSettings(id);
+  const m={from:"v",text,t:Date.now()};addLocal(id,m);persistMsg(id,m);
   renderLog();toBottom();requestReply(id,text)}
-log.addEventListener("click",e=>{const o=e.target.closest(".opt");if(!o)return;const c=S.c[S.active].choices;if(c&&c[o.dataset.i]!=null)sendText(c[o.dataset.i])});
+log.addEventListener("click",e=>{const o=e.target.closest(".opt");if(!o)return;const c=set[app.active].choices;if(c&&c[o.dataset.i]!=null)sendText(c[o.dataset.i])});
 log.addEventListener("keydown",e=>{const o=e.target.closest(".opt");if(!o||!/^Arrow(Up|Down)$/.test(e.key))return;e.preventDefault();
   const all=[...log.querySelectorAll(".opt")],n=all.indexOf(o)+(e.key==="ArrowDown"?1:-1);(all[n]||o).focus()});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&ready)ORDER.forEach(id=>{if(setTimers[id]){clearTimeout(setTimers[id]);setTimers[id]=0;saveSettings(id)}})});
 
 /* ---- 切換／面板 ---- */
-function switchTo(id){if(!C[id])return;scrollPos[S.active]=nearBottom()?null:log.scrollTop;
-  S.active=id;S.c[id].unread=0;save();newCount=0;renderLog();renderHead();
-  ta.value=S.c[id].draft||"";size();
+async function switchTo(id){if(!C[id]||!ready)return;scrollPos[app.active]=nearBottom()?null:log.scrollTop;
+  app.active=id;saveApp();if(set[id].unread){set[id].unread=0;saveSettings(id)}newCount=0;
+  await openRoom(id);if(app.active!==id)return;
+  renderLog();renderHead();ta.value=set[id].draft||"";size();
   if(scrollPos[id]!=null)log.scrollTop=scrollPos[id];else toBottom();updJump();
   if(matchMedia("(max-width:1100px)").matches)closeSheet();else renderSheet()}
 function openSheet(m){sheetMode=m;renderSheet();sheet.classList.add("open");scrim.classList.add("open")}
@@ -598,14 +829,77 @@ $("who").onclick=()=>toggleSheet("contacts");$("hC").onclick=()=>toggleSheet("co
 $("tC").onclick=()=>{sheetMode="contacts";renderSheet()};$("tI").onclick=()=>{sheetMode="profile";renderSheet()};
 $("sx").onclick=closeSheet;scrim.onclick=closeSheet;
 
-/* ---- 重設 ---- */
-function askReset(){const c=C[S.active];$("dlgT").textContent=`重設與${c.short}的對話？`;
-  $("dlgP").textContent=`這會清除你和${c.short}的所有訊息與未送出草稿，恢復成初始對話。其他角色的紀錄不受影響。`;
-  dlg.classList.add("open");$("dNo").focus()}
-const closeDlg=()=>{dlg.classList.remove("open")};
-$("hR").onclick=askReset;$("dNo").onclick=closeDlg;dlg.onclick=e=>{if(e.target===dlg)closeDlg()};
-$("dYes").onclick=()=>{const id=S.active,mode=S.c[id].mode;S.c[id]=seedOf(id);if(mode)S.c[id].mode=mode;typing[id]=false;pend[id]=0;save();closeDlg();
-  ta.value="";size();renderLog();renderHead();toBottom();if(sheet.classList.contains("open"))renderSheet();ta.focus()};
+/* ---- 對話框（重設、匯入共用） ---- */
+let dlgOk=null;
+function openDialog(title,body,okText,onOk){$("dlgT").textContent=title;$("dlgP").textContent=body;$("dYes").textContent=okText;dlgOk=onOk;dlg.classList.add("open");$("dNo").focus()}
+const closeDlg=()=>{dlg.classList.remove("open");dlgOk=null};
+$("dNo").onclick=closeDlg;dlg.onclick=e=>{if(e.target===dlg)closeDlg()};
+$("dYes").onclick=()=>{const f=dlgOk;closeDlg();f&&f()};
+
+/* ---- 重設（只影響目前角色） ---- */
+function askReset(){if(!ready)return;const c=C[app.active];
+  openDialog(`重設與${c.short}的對話？`,`這會清除你和${c.short}的所有訊息與未送出草稿，恢復成初始對話。其他角色的紀錄不受影響。建議先匯出備份。`,"重設",()=>resetContact(app.active))}
+async function resetContact(id){
+  epoch[id]++;typing[id]=false;pend[id]=0;queue[id]=Promise.resolve();
+  const fresh={id,draft:"",unread:0,mode:set[id].mode,choices:null,seeded:true};
+  try{
+    await store.clearContact(id,fresh);
+    const now=Date.now(),seeded=await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
+    set[id]=fresh;win[id]={msgs:seeded,hasMore:false,loading:false,loaded:true};lastMsg[id]=seeded[seeded.length-1]||null;
+    failures.splice(0,failures.length,...failures.filter(f=>!f.key.includes(":"+id)));renderSbar();
+  }catch(e){fail("reset:"+id,`${C[id].short}的重設沒有完成`,e,()=>resetContact(id))}
+  if(app.active===id){ta.value="";size();renderLog();toBottom()}renderHead();if(sheet.classList.contains("open"))renderSheet();ta.focus()}
+$("hR").onclick=askReset;
+
+/* ---- 匯出／匯入 ---- */
+const EXPORT_FORMAT="nightline-holo-chat";
+async function buildExport(){
+  const out={format:EXPORT_FORMAT,version:1,exportedAt:new Date().toISOString(),active:app.active,contacts:{}};
+  for(const id of ORDER){const msgs=await store.dumpContact(id);
+    out.contacts[id]={name:C[id].name,settings:{mode:set[id].mode,draft:set[id].draft},messages:msgs.map(cleanMsg)}}
+  return out;
+}
+async function exportAll(){
+  try{
+    const data=await buildExport(),n=ORDER.reduce((a,id)=>a+data.contacts[id].messages.length,0);
+    const d=new Date(),name=`nightline-holo-${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}.json`;
+    const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+    const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    if(!failures.length&&!fatalErr)renderSbar(`已匯出 ${n} 則訊息（${name}）`);
+  }catch(e){fail("export","匯出失敗",e,exportAll)}
+}
+function parseImport(text){
+  let data;try{data=JSON.parse(text)}catch(e){throw new Error("檔案不是有效的 JSON")}
+  if(!data||data.format!==EXPORT_FORMAT||typeof data.contacts!=="object")throw new Error("這不是 NIGHTLINE 匯出的聊天紀錄檔");
+  if(data.version!==1)throw new Error(`不支援的檔案版本：${data.version}`);
+  const plan=[],skipped=[];let total=0;
+  for(const [id,c] of Object.entries(data.contacts)){
+    if(!C[id]){skipped.push(id);continue}
+    if(!c||!Array.isArray(c.messages))throw new Error(`${C[id].short}的資料格式不正確`);
+    const bad=c.messages.findIndex(m=>!validMsg(m));
+    if(bad>=0)throw new Error(`${C[id].short}的第 ${bad+1} 則訊息格式不正確`);
+    total+=c.messages.length;plan.push({id,messages:c.messages});
+  }
+  return {plan,total,skipped};
+}
+$("imp").addEventListener("change",async e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+  let parsed;try{parsed=parseImport(await f.text())}catch(err){renderSbar("無法匯入："+why(err),true);return}
+  const who=parsed.plan.map(p=>C[p.id].short).join("、")||"（沒有可匯入的角色）";
+  openDialog("匯入聊天紀錄？",`檔案「${f.name}」共有 ${parsed.total} 則訊息（${who}）。會與現有紀錄合併並依時間排序，重複的訊息會略過，不會刪除任何現有紀錄。`,"匯入",()=>runImport(parsed));
+});
+async function runImport(parsed){
+  try{
+    const plan=parsed.plan.map(p=>({...p,settings:{...set[p.id],seeded:true}}));
+    const res=await store.mergeContacts(plan);
+    for(const p of parsed.plan){set[p.id].seeded=true;win[p.id]={msgs:[],hasMore:false,loading:false,loaded:false};
+      const last=await store.latest(p.id,1);lastMsg[p.id]=last[0]||null}
+    await openRoom(app.active);renderLog();toBottom();renderHead();if(sheet.classList.contains("open"))renderSheet();
+    const added=res.reduce((a,r)=>a+r.added,0),dup=res.reduce((a,r)=>a+r.skipped,0);
+    renderSbar(`已匯入 ${added} 則訊息${dup?`，略過重複 ${dup} 則`:""}${parsed.skipped.length?`，略過不認得的角色 ${parsed.skipped.length} 個`:""}`);
+  }catch(err){fail("import","匯入的紀錄沒有存進本機，現有紀錄未變動",err,()=>runImport(parsed))}
+}
 
 /* ---- 快捷鍵 ---- */
 document.addEventListener("keydown",e=>{
@@ -620,7 +914,35 @@ const vv=window.visualViewport;
 function fitVV(){if(!vv)return;document.documentElement.style.setProperty("--app-h",vv.height+"px");window.scrollTo(0,0)}
 if(vv){vv.addEventListener("resize",fitVV);fitVV()}
 
-renderHead();renderLog();ta.value=S.c[S.active].draft||"";size();toBottom();
+/* ============================================================
+   7. 啟動：開資料庫 → 遷移舊資料 → 讀設定 → 補初始對話 → 開聊天室
+   ============================================================ */
+async function boot(){
+  renderHead();size();
+  store=IndexedDBStore();
+  try{await store.open();store.onlost=e=>{fatalErr=e;renderSbar()}}
+  catch(e){fatalErr=e;store=MemoryStore();await store.open()}
+  try{const r=await migrateLegacy(store);if(r.status==="migrated")console.info("[NIGHTLINE] 已從 localStorage 遷移",r.result)}
+  catch(e){fail("migrate","舊版紀錄還沒有搬進新資料庫，原資料仍完整保留",e,async()=>{await migrateLegacy(store);location.reload()})}
+  try{
+    const a=await store.getMeta("app");if(a&&C[a.active])app.active=a.active;
+    for(const id of ORDER){const s=await store.getSettings(id);if(s)set[id]={...set[id],...s,id}}
+    for(const id of ORDER){
+      if(!set[id].seeded){
+        if(await store.count(id)===0){const now=Date.now();await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
+        set[id].seeded=true;await store.putSettings({...set[id]});
+      }
+      const last=await store.latest(id,1);lastMsg[id]=last[0]||null;
+    }
+  }catch(e){fail("boot","初始資料讀取失敗",e,()=>location.reload())}
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}
+  await openRoom(app.active);
+  ready=true;renderHead();renderLog();ta.value=set[app.active].draft||"";size();toBottom();
+  if(fatalErr)renderSbar();
+}
+const readyP=boot();
+/* 開發與測試用：在主控台可用 NIGHTLINE.store 檢查資料 */
+window.NIGHTLINE={get store(){return store},ready:readyP,buildExport,buildContext,get settings(){return set}};
 }
 </script>
 </body>
