@@ -318,7 +318,7 @@ const C={
         bye:[["好","晚安，夢裡見 <3"],["嗯，去吧","明天換我先傳訊息給你"],["掰掰","……還是有點捨不得 -.-"]],
         any:["嗯哼，繼續說，我在聽","好啦好啦，都聽你的 <3",["哈哈哈","你怎麼這麼好笑"],["我剛剛在想","下次放假我們去海邊吧，就我們兩個"],["你知道嗎","有你在，夜城好像沒那麼吵了"],["……","沒事，只是想多看一下你的訊息"]]}},
     t:[["個性","直率、心軟，看不慣欺負人的事；講到在乎的事會變笨拙"],["語氣","口語、愛吐槽，常用 -.- ;) xD <3 和「……」"],["回覆","短句連發，害羞時拆得更碎"]],
-    seed:[[-985,"n","V，你還醒著嗎"],[-984,"n","上次那段幻舞我修好了，畫面乾淨多了。"],[-981,"v","醒著。修好就好，辛苦了"],[-980,"n","下次換你陪我測試，不准逃 ;)"]],
+    seed:[[-985,"n","V，還醒著嗎？"],[-984,"n","上次那段幻舞我處理好了，畫面乾淨多了。"],[-981,"v","醒著。搞定就好，辛苦了。"],[-980,"n","下次陪我測試，別想偷溜 ;)"]],
     pool:{
       greet:[["嗨嗨","剛好在等渲染，你來得正是時候"],["在啊","怎麼了？又闖禍了嗎 -.-"],["早","我咖啡才喝一半，講話可能會很衝，先說"],["喔，是你","等我一下……好，現在注意力全部給你 ;)"]],
       q:["嗯……問得好，我想一下","你問我？我比較想問你 -.-","老實說我也不確定，但我站你這邊","這個嘛，見面再說比較好",["嗯……","這題有點難","讓我想一下再回你好嗎"]],
@@ -383,6 +383,7 @@ function personaOf(id,mode){
    latest(id, n) / before(id, seq, n)  分頁讀取（由舊到新排序）
    count(id) / dumpContact(id)         筆數／全部訊息（匯出用）
    clearContact(id, settings)          清除該 NPC 的訊息與 AI 資料，寫入新的設定
+   patchMessages(id, [{seq, text}])    修改指定訊息的文字（只用於更新預設開場台詞）
    mergeContacts(plan)                 單一交易合併多位 NPC 的訊息與設定，重複的略過；
                                        任何一步失敗就整筆不寫入（遷移、匯入用）
    getSummary(id) / putSummary(id, s)  歷史摘要（預留給 AI，現在不寫入）
@@ -453,6 +454,10 @@ function IndexedDBStore(){
         result.push({id:p.id,added:fresh.length,skipped,total:existing.length+fresh.length});
       }
       await txDone(t);return result},
+    async patchMessages(id,patches){
+      const t=T("messages","readwrite"),st=t.objectStore("messages");
+      for(const p of patches){const m=await reqP(st.get([id,p.seq]));if(m)st.put({...m,text:p.text})}
+      await txDone(t)},
     async getSummary(id){return (await reqP(T("summaries").objectStore("summaries").get(id)))||null},
     async putSummary(id,s){const t=T("summaries","readwrite");t.objectStore("summaries").put({...s,contactId:id});await txDone(t)},
     async listMemories(id){return reqP(T("memories").objectStore("memories").getAll(krange(id)))},
@@ -477,6 +482,7 @@ function MemoryStore(){
       for(const m of p.messages){const k=msgKey(m);if(seen.has(k)){skipped++;continue}seen.add(k);fresh.push(cleanMsg(m))}
       const all=sortChrono([...a.map(cleanMsg),...fresh]);msgs.set(p.id,all.map((m,i)=>({contactId:p.id,seq:i+1,...m})));
       if(p.settings)settings.set(p.id,{...p.settings});return {id:p.id,added:fresh.length,skipped,total:all.length}})},
+    async patchMessages(id,patches){for(const p of patches){const m=L(id).find(x=>x.seq===p.seq);if(m)m.text=p.text}},
     async getSummary(id){return sums.get(id)||null},async putSummary(id,s){sums.set(id,{...s,contactId:id})},
     async listMemories(id){return (mems.get(id)||[]).slice()},async putMemory(id,m){if(!mems.has(id))mems.set(id,[]);mems.get(id).push({...m,contactId:id})},
   };
@@ -500,7 +506,7 @@ async function migrateLegacy(store){
   const plan=[],expect={};
   for(const id of ORDER){
     const c=data&&data.c&&data.c[id];if(!c)continue;
-    const list=(Array.isArray(c.log)?c.log:[]).map(m=>fixLegacyText(id,m)).filter(validMsg);
+    const list=normalizeSeeds(id,(Array.isArray(c.log)?c.log:[]).map(m=>fixLegacyText(id,m)).filter(validMsg));
     expect[id]=new Set(list.map(msgKey)).size;
     plan.push({id,messages:list,settings:{id,draft:typeof c.draft==="string"?c.draft:"",unread:Number(c.unread)||0,
       mode:c.mode==="friend"||c.mode==="lover"?c.mode:defaultMode(id),choices:Array.isArray(c.choices)?c.choices.map(String).slice(0,3):null,seeded:true}});
@@ -511,6 +517,25 @@ async function migrateLegacy(store){
   if(data&&C[data.active])await store.putMeta("app",{active:data.active});
   await store.putMeta("migration.localStorage.v1",{status:"done",at:Date.now(),found:true,result});
   return {status:"migrated",result};
+}
+
+/* 開場台詞更新：只看最前面幾則，且第 i 則的文字要和舊預設的第 i 句完全相同才改；
+   後來使用者自己打的同樣文字不會被動到。每個版本只跑一次。 */
+const SEED_UPDATES=[{key:"seedText.judy.v2",id:"judy",
+  old:["V，你還醒著嗎","上次那段幻舞我修好了，畫面乾淨多了。","醒著。修好就好，辛苦了","下次換你陪我測試，不准逃 ;)"]}];
+const seedNew=id=>C[id].seed.map(x=>x[2]);
+function normalizeSeeds(id,list){                    /* 遷移時先套用同樣轉換，重跑才比對得到重複 */
+  const u=SEED_UPDATES.find(x=>x.id===id);if(!u)return list;const nw=seedNew(id);
+  return list.map((m,i)=>i<u.old.length&&m.text===u.old[i]?{...m,text:nw[i]}:m);
+}
+async function applySeedUpdates(store){
+  for(const u of SEED_UPDATES){
+    if(await store.getMeta(u.key))continue;
+    const nw=seedNew(u.id),first=(await store.dumpContact(u.id)).slice(0,u.old.length);
+    const patches=first.map((m,i)=>m.text===u.old[i]?{seq:m.seq,text:nw[i]}:null).filter(Boolean);
+    if(patches.length)await store.patchMessages(u.id,patches);
+    await store.putMeta(u.key,{at:Date.now(),patched:patches.length});
+  }
 }
 
 /* ============================================================
@@ -924,6 +949,7 @@ async function boot(){
   catch(e){fatalErr=e;store=MemoryStore();await store.open()}
   try{const r=await migrateLegacy(store);if(r.status==="migrated")console.info("[NIGHTLINE] 已從 localStorage 遷移",r.result)}
   catch(e){fail("migrate","舊版紀錄還沒有搬進新資料庫，原資料仍完整保留",e,async()=>{await migrateLegacy(store);location.reload()})}
+  try{await applySeedUpdates(store)}catch(e){fail("seedtext","開場台詞更新沒有完成（不影響其他紀錄）",e,()=>applySeedUpdates(store))}
   try{
     const a=await store.getMeta("app");if(a&&C[a.active])app.active=a.active;
     for(const id of ORDER){const s=await store.getSettings(id);if(s)set[id]={...set[id],...s,id}}
