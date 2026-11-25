@@ -102,6 +102,17 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .bub svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .bub .tx{position:relative;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
 .stamp{font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#6a8f93;margin:5px 1px 0;white-space:nowrap}
+.choices{display:flex;flex-direction:column;align-items:flex-end;gap:7px;margin-top:16px;padding-right:30px}
+.choices .lead{font-size:11px;color:var(--mute);margin-right:2px}
+.opt{position:relative;max-width:min(92%,34em);padding:3px 12px 8px 9px;text-align:left;font-size:16px;line-height:1.5;color:rgba(120,223,184,.62);background:none}
+.opt svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.opt svg path{stroke:rgba(78,153,126,.55);fill:transparent;transition:fill .12s,stroke .12s}
+.opt .tx{position:relative;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.opt:hover,.opt:focus-visible{color:var(--t-v);outline:none}
+.opt:hover svg path,.opt:focus-visible svg path{stroke:#6fcfae;fill:rgba(36,98,80,.45)}
+.opt::after{content:"⏎";position:absolute;right:-29px;top:calc(50% - 14px);width:22px;height:22px;border-radius:50%;background:#bfe9ea;color:#0b1a1c;
+  font:600 12px/22px Rajdhani,sans-serif;text-align:center;opacity:0;transition:opacity .12s}
+.opt:hover::after,.opt:focus-visible::after{opacity:1}
 .sysm{margin:14px 0;text-align:center;font-size:12px;color:var(--red)}
 .dots{position:relative;display:flex;gap:4px;padding:6px 2px 3px}
 .dots i{width:5px;height:5px;background:var(--t-n);opacity:.3;animation:bl 1.1s infinite}
@@ -116,18 +127,20 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 
 /* ---------- 輸入區 ---------- */
 .comp{display:grid;grid-template-columns:var(--gut) minmax(0,1fr);padding-top:12px;flex:none}
-.box{position:relative;display:flex;align-items:flex-end;gap:10px;padding:8px 8px 8px 14px;min-height:48px}
+.box{position:relative;display:flex;align-items:flex-end;gap:10px;padding:7px 8px 12px 13px;min-height:48px}
 .box>svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
-.box>svg path{stroke:var(--red-d);fill:rgba(20,5,7,.55);transition:stroke .15s}
-.box.f>svg path{stroke:var(--v)}
+.box>svg path{stroke:rgba(78,153,126,.42);fill:rgba(8,18,17,.55);transition:stroke .15s,fill .15s}
+.box:hover>svg path{stroke:rgba(78,153,126,.65)}
+.box.f>svg path{stroke:#5fae93;fill:rgba(19,45,38,.8)}
 textarea{position:relative;flex:1;resize:none;border:0;outline:0;background:transparent;color:var(--v-t);
   font:500 16px/1.5 "Noto Sans TC",sans-serif;padding:4px 0;height:32px;max-height:132px;overflow-y:auto;scrollbar-width:thin}
-textarea::placeholder{color:rgba(169,241,204,.35)}
-.send{position:relative;flex:none;height:34px;padding:0 14px 0 12px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;
-  color:#05140d;background:var(--v);clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
-.send:disabled{background:rgba(111,223,167,.16);color:rgba(169,241,204,.45);cursor:default}
-.send svg{width:12px;height:12px;flex:none}
-.send:not(:disabled):hover{filter:brightness(1.1)}
+textarea::placeholder{color:rgba(120,223,184,.32)}
+.send{position:relative;flex:none;height:34px;padding:0 2px 0 4px;display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;color:var(--red);background:none}
+.send .k{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#bfe9ea;color:#0b1a1c;transition:background .15s}
+.send .k svg{width:11px;height:11px;margin-left:2px}
+.send:disabled{color:var(--mute);cursor:default}
+.send:disabled .k{background:rgba(191,233,234,.2);color:#cfe4e2}
+.send:not(:disabled):hover .k{background:#fff}
 .hints{grid-column:2;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin-top:10px;font-size:13px}
 .hint{display:flex;align-items:center;gap:7px;color:var(--red);min-height:28px;white-space:nowrap}
 .hint.static{color:var(--mute)}
@@ -239,7 +252,7 @@ textarea::placeholder{color:rgba(169,241,204,.35)}
         <svg aria-hidden="true"><path stroke-width="1.5" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg>
         <label class="sr" for="ta">以 V 的身分輸入訊息</label>
         <textarea id="ta" rows="1" placeholder="以 V 的身分回覆…" enterkeyhint="send"></textarea>
-        <button class="send" id="send" type="submit" disabled>傳送<svg viewBox="0 0 13 13" fill="currentColor" aria-hidden="true"><path d="M0 0l13 6.5L0 13l2-6.5z"/></svg></button>
+        <button class="send" id="send" type="submit" disabled><span class="k" aria-hidden="true"><svg viewBox="0 0 13 13" fill="currentColor"><path d="M0 0l13 6.5L0 13l2-6.5z"/></svg></span>傳送</button>
       </form>
       <div class="hints">
         <span class="hint static"><span class="key">⏎</span>傳送</span>
@@ -376,7 +389,7 @@ function draw(el){
   s.firstElementChild.setAttribute("d",shape(el.dataset.k,w,h));
 }
 const ro=new ResizeObserver(es=>es.forEach(e=>draw(e.target)));
-const roBox=new ResizeObserver(()=>draw(box));box.dataset.k="box";roBox.observe(box);
+const roBox=new ResizeObserver(()=>draw(box));box.dataset.k="v";roBox.observe(box);
 
 function bub(kind,inner){
   const col=kind==="n"?"var(--e-n)":"var(--e-v)",bg=kind==="n"?"var(--f-n)":"var(--f-v)";
@@ -399,7 +412,10 @@ function renderLog(){
   flush();
   if(typing[id]){const join=prev&&prev.from==="n";
     h+=`<div class="grp n${join?" join":""}">`+bub("n",`<span class="dots"><i></i><i></i><i></i></span><span class="sr">${esc(C[id].short)} 輸入中</span>`)+`</div>`}
-  ro.disconnect();log.innerHTML=h;log.querySelectorAll(".bub").forEach(b=>{draw(b);ro.observe(b)});
+  const ch=!typing[id]&&S.c[id].choices;
+  if(ch&&ch.length)h+=`<div class="choices" role="group" aria-label="快速回覆"><span class="lead">選一個回覆，或直接輸入</span>`+
+    ch.map((t,i)=>`<button class="opt" data-k="v" data-i="${i}"><svg aria-hidden="true"><path stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg><span class="tx">${esc(t)}</span></button>`).join("")+`</div>`;
+  ro.disconnect();log.innerHTML=h;log.querySelectorAll(".bub,.opt").forEach(b=>{draw(b);ro.observe(b)});
 }
 function renderHead(){
   const c=C[S.active];
@@ -457,7 +473,8 @@ const MockProvider={
   name:"mock",
   async reply({contactId,text,history}){
     await sleep(700+R()*900);                       /* 模擬網路與思考時間 */
-    return mockCompose(contactId,text,history);
+    const {messages,k}=mockCompose(contactId,text,history);
+    return {messages,choices:mockChoices(contactId,k)};
   }
 };
 /* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
@@ -477,15 +494,40 @@ function mockCompose(id,text,history){
   const hit=rules.find(([k,re])=>p[k]&&re.test(text)),k=hit?hit[0]:"any";
   const first=v=>Array.isArray(v)?v[0]:v,avoid=lastNpc&&lastNpc.text;
   let x;for(let i=0;i<6;i++){x=p[k][Math.floor(R()*p[k].length)];if(first(x)!==avoid)break}
-  if(Array.isArray(x))return x.slice();
+  if(Array.isArray(x))return {messages:x.slice(),k};
   const out=[x];
   if(R()<.3){const y=p.any.filter(v=>!Array.isArray(v)&&v!==x);if(y.length)out.push(y[Math.floor(R()*y.length)])}
-  return out;
+  return {messages:out,k};
+}
+/* 模擬模式：約四成機率給三個回覆選項，依剛才的情境挑；連續兩輪不重複出現 */
+const CHOICES={
+  judy:{
+    lover:{
+      greet:["嗨，在忙嗎？","剛好想傳訊息給你","我來報到了 ;)"],
+      love:["我比你更想","那我現在過去？","……你這樣我也會害羞"],
+      praise:["我是說真的","好啦，不鬧你了","你害羞的樣子也很好看"],
+      worry:["我沒事，別擔心","只是一點擦傷","今晚可以去你那嗎？"],
+      work:["弄好第一個給我看","別太累，記得吃東西","需要幫忙就說"],
+      tired:["好，我去睡了","再陪我一下下","你也早點休息"],
+      bye:["晚安，好夢","明天見","再聊五分鐘？"],
+      q:["跟你一起的話都好","讓我想想","你先說你的答案"],
+      any:["哈，你今天心情不錯喔","我剛好也在想你","等等，你在打什麼主意？"]},
+    friend:{
+      greet:["嗨，在忙嗎？","有空聊一下嗎","我又來吵你了"],
+      worry:["我沒事，別擔心","只是一點擦傷","這次真的有點險"],
+      work:["弄好給我看看","別熬夜剪片","需要幫忙就說"],
+      bye:["晚安","明天見","改天請你喝一杯"],
+      any:["哈，真的假的","然後呢？","我晚點打給你"]}}};
+let lastChoiceTurn={};
+function mockChoices(id,k){
+  const bank=CHOICES[id]&&CHOICES[id][S.c[id].mode==="lover"?"lover":"friend"];
+  if(!bank||lastChoiceTurn[id]||R()>.4){lastChoiceTurn[id]=false;return null}
+  lastChoiceTurn[id]=true;return (bank[k]||bank.any).slice();
 }
 /* 之後接 API 的寫法（示意，未啟用）：
 const ApiProvider={name:"api",async reply(req){
   const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(req)});
-  if(!r.ok)throw new Error("HTTP "+r.status);return (await r.json()).messages;}};
+  if(!r.ok)throw new Error("HTTP "+r.status);return await r.json();}};   // { messages:[…], choices?:[…] }
 */
 let replyProvider=MockProvider;
 
@@ -510,11 +552,15 @@ async function runReply(id,text){
   try{msgs=await replyProvider.reply({contactId:id,profile:{name:C[id].name,role:C[id].role,relationship:S.c[id].mode||"friend",rel:relOf(id),traits:C[id].t},text,history:toHistory(room.log)})}
   catch(e){if(S.c[id]!==room)return;typing[id]=false;deliver(id,"訊號中斷，這則訊息沒有收到回覆。","sys");return}
   if(S.c[id]!==room)return;
+  let choices=null;
+  if(msgs&&!Array.isArray(msgs)&&typeof msgs==="object"){choices=msgs.choices;msgs=msgs.messages}
   msgs=(Array.isArray(msgs)?msgs:[msgs]).map(String).filter(m=>m.trim());
+  choices=Array.isArray(choices)?choices.map(String).filter(c=>c.trim()).slice(0,3):null;
   for(let i=0;i<msgs.length;i++){
     if(i>0){setTyping(id,true);await sleep(Math.min(1800,500+msgs[i].length*35));if(S.c[id]!==room)return}
     typing[id]=false;deliver(id,msgs[i]);
   }
+  if(choices&&choices.length&&pend[id]<=1){room.choices=choices;save();if(id===S.active)refresh(false)}
 }
 
 /* ---- 輸入 ---- */
@@ -528,8 +574,13 @@ ta.addEventListener("focus",()=>{box.classList.add("f");document.querySelector("
 ta.addEventListener("blur",()=>{box.classList.remove("f");document.querySelector(".term").classList.remove("typing-on")});
 box.addEventListener("submit",e=>{e.preventDefault();send();ta.focus()});
 function send(){const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
-  const id=S.active;S.c[id].log.push({id:"m"+Date.now(),from:"v",text,t:Date.now()});S.c[id].draft="";ta.value="";size();save();
+  S.c[S.active].draft="";ta.value="";size();sendText(text)}
+function sendText(text){const id=S.active;S.c[id].choices=null;
+  S.c[id].log.push({id:"m"+Date.now(),from:"v",text,t:Date.now()});save();
   renderLog();toBottom();requestReply(id,text)}
+log.addEventListener("click",e=>{const o=e.target.closest(".opt");if(!o)return;const c=S.c[S.active].choices;if(c&&c[o.dataset.i]!=null)sendText(c[o.dataset.i])});
+log.addEventListener("keydown",e=>{const o=e.target.closest(".opt");if(!o||!/^Arrow(Up|Down)$/.test(e.key))return;e.preventDefault();
+  const all=[...log.querySelectorAll(".opt")],n=all.indexOf(o)+(e.key==="ArrowDown"?1:-1);(all[n]||o).focus()});
 
 /* ---- 切換／面板 ---- */
 function switchTo(id){if(!C[id])return;scrollPos[S.active]=nearBottom()?null:log.scrollTop;
