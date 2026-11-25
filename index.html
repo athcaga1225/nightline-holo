@@ -259,17 +259,17 @@ textarea::placeholder{color:rgba(169,241,204,.35)}
 {
 const C={
   judy:{name:"茱蒂・艾法瑞茲",short:"茱蒂",en:"JUDY ALVAREZ",g:"茱",code:"JA-07",
-    role:"超夢技術師",base:"夜城",
+    role:"幻舞技師",base:"夜城",
     rel:"交情很深的朋友。一起扛過幾件不能說的事，現在有事沒事都會傳訊息。",
     t:[["個性","直率、心軟，看不慣欺負人的事"],["語氣","口語、愛吐槽，熟了會用顏文字"],["回覆","偏短，常分兩則連發"]],
-    seed:[[-985,"n","V，你還醒著嗎"],[-984,"n","我把上次那段超夢修好了，畫面乾淨很多"],[-981,"v","醒著。修好就好，辛苦了"],[-980,"n","下次換你陪我測試，不准逃 ;)"]],
+    seed:[[-985,"n","V，你還醒著嗎"],[-984,"n","上次那段幻舞我修好了，畫面乾淨多了。"],[-981,"v","醒著。修好就好，辛苦了"],[-980,"n","下次換你陪我測試，不准逃 ;)"]],
     pool:{
       q:["嗯……問得好，我想一下","你問我？我比較想問你 -.-","老實說我也不確定，但我站你這邊","這個嘛，見面再說比較好"],
       thx:["跟我客氣什麼","好啦，收下了 :)","欠我一杯，記帳"],
       tired:["你最近是不是都沒睡？","先去休息。我是認真的","別硬撐，V"],
       any:["收到。我手邊在剪片，等我一下","你又在哪裡惹事了？老實招來","哈，這個我喜歡","好啦好啦，聽你的","這種事你應該早點跟我說 -.-","我懂。真的。","等等，渲染跑完了……好，繼續說","下次碰面我請你喝一杯"]}},
-  panam:{name:"帕娜・帕瑪",short:"帕娜",en:"PANAM PALMER",g:"帕",code:"PP-11",
-    role:"遊牧民",base:"夜城外的荒原",
+  panam:{name:"帕娜・琶爾莫",short:"帕娜",en:"PANAM PALMER",g:"帕",code:"PP-11",
+    role:"阿德卡多家族出身的傭兵",base:"夜城外的荒原",
     rel:"一起開過車、也一起闖過險的夥伴。嘴上不說，但營地永遠替你留個位置。",
     t:[["個性","爽快、倔強、重義氣"],["語氣","乾脆，偶爾嘴硬"],["回覆","直接講重點"]],
     seed:[[-410,"n","我們在城外紮營，訊號時有時無"],[-409,"n","有空打給我。不是急事……大概不是"]],
@@ -278,7 +278,7 @@ const C={
       thx:["少來，我們之間不用這套","行，記住了"],
       tired:["那就過來營地睡一晚，比城裡安靜","別逞強。我會罵人的"],
       any:["哈！行啊，算你一份","車又出問題了。別問。","需要支援就喊一聲","城裡的人真的很麻煩……不包括你。大概。","今晚營地有篝火，有空就過來","我才沒有在擔心你","好，我記下了","收到，晚點回你"]}},
-  johnny:{name:"強尼・銀手",short:"強尼",en:"JOHNNY SILVERHAND",g:"銀",code:"JS-77",
+  johnny:{name:"銀手強尼",short:"強尼",en:"JOHNNY SILVERHAND",g:"銀",code:"JS-77",
     role:"搖滾樂手（以數位人格的形式存在）",base:"你的腦袋裡",
     rel:"和 V 共用一副身體的不速之客。互看不順眼，又誰也離不開誰。",
     t:[["個性","叛逆、尖銳，痛恨企業"],["語氣","嘲諷帶刺，很少說好聽話"],["回覆","短句，愛反問"]],
@@ -301,6 +301,13 @@ function seedOf(id,now=Date.now()){
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.c&&ORDER.every(k=>s.c[k]))return s}catch(e){}return null}
 let S=load();
 if(!S){const n=Date.now();S={active:"judy",c:{}};ORDER.forEach(k=>S.c[k]=seedOf(k,n));}
+const oldJudySeed = S.c.judy.log.find(message =>
+  message.id === "s1" && message.from === "n" && message.text === "我把上次那段超夢修好了，畫面乾淨很多"
+);
+if (oldJudySeed) {
+  oldJudySeed.text = "上次那段幻舞我修好了，畫面乾淨多了。";
+  save();
+}
 if(!C[S.active])S.active="judy";
 let saveT;function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function saveSoon(){clearTimeout(saveT);saveT=setTimeout(save,300)}
