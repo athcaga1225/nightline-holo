@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-four-dialogues-1">
+<meta name="nightline-version" content="mock-lines-2">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -312,15 +312,17 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   </div>
 </div>
 
-<script src="./mock-scenarios.js"></script>
+<script src="./mock-scenarios.js?v=lines-2"></script>
 <script>
 {
 const MOCK_TEST=new URLSearchParams(location.search).get("test")==="1";
-const MOCK_SCENES=window.NIGHTLINE_MOCK_SCENARIOS||[];
+const MOCK_SCENES=(window.NIGHTLINE_MOCK_SCENARIOS||[]).map(s=>({...s,turns:s.turns.map(t=>({...t,messages:t.messages.flatMap(m=>m.split(/\r?\n/).filter(x=>x.trim()))}))}));
+let testSending=false;
 const sceneNumber=Math.max(0,Math.min(MOCK_SCENES.length-1,Number(new URLSearchParams(location.search).get("scene"))||0));
 const activeScene=MOCK_SCENES[sceneNumber];
 const smsText=t=>t.replace(/妳/g,"你").replace(/[⋯…]+|[.．]{2,}/g,"⋯⋯");
 function approvedMock(recent,strict=false){
+  recent=recent.flatMap(m=>m.text.split(/\r?\n/).filter(x=>x.trim()).map(text=>({...m,text})));
   const list=MOCK_TEST?[activeScene]:MOCK_SCENES;
   for(const scene of list){
     const prefix=[];
@@ -431,7 +433,7 @@ function personaOf(id,mode){
    每位 NPC 的訊息以 [contactId, seq] 為主鍵，各自占一段獨立的鍵範圍；
    清除、分頁、匯出都只作用在該 NPC 的範圍內。不設數量上限，也不會自動刪除。
    ============================================================ */
-const DB_NAME=MOCK_TEST?"nightline-holo-demo-"+sceneNumber:"nightline-holo",DB_VER=2;
+const DB_NAME=MOCK_TEST?"nightline-holo-demo-lines-"+sceneNumber:"nightline-holo",DB_VER=2;
 const reqP=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const txDone=t=>new Promise((res,rej)=>{t.oncomplete=()=>res();t.onerror=()=>rej(t.error||new Error("寫入失敗"));
   t.onabort=()=>rej(t.error||new DOMException("寫入已中止","AbortError"))});
@@ -894,7 +896,7 @@ function deliver(id,text,from="n",extra){
 function requestReply(id,text){
   pend[id]=(pend[id]||0)+1;const ep=epoch[id];
   queue[id]=(queue[id]||Promise.resolve()).then(()=>runReply(id,text,ep)).catch(()=>{}).then(()=>{
-    if(epoch[id]!==ep)return;pend[id]--;if(!pend[id]&&typing[id])setTyping(id,false)});
+    if(epoch[id]!==ep)return;pend[id]--;if(!pend[id]&&typing[id])setTyping(id,false);if(MOCK_TEST)size()});
 }
 async function runReply(id,text,ep){
   await sleep(350);if(epoch[id]!==ep)return;
@@ -916,7 +918,7 @@ async function runReply(id,text,ep){
 
 /* ---- 輸入 ---- */
 let composing=false;
-function size(){ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,132)+"px";sendB.disabled=!ready||!ta.value.trim()}
+function size(){ta.style.height="auto";ta.style.height=Math.min(ta.scrollHeight,132)+"px";sendB.disabled=!ready||!ta.value.trim()||(MOCK_TEST&&(testSending||pend.judy>0))}
 ta.addEventListener("compositionstart",()=>composing=true);
 ta.addEventListener("compositionend",()=>setTimeout(()=>composing=false,0));
 ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){if(composing||e.isComposing||e.keyCode===229)return;e.preventDefault();send()}});
@@ -924,9 +926,18 @@ ta.addEventListener("input",()=>{if(!ready)return;set[app.active].draft=ta.value
 ta.addEventListener("focus",()=>{box.classList.add("f");document.querySelector(".term").classList.add("typing-on")});
 ta.addEventListener("blur",()=>{box.classList.remove("f");document.querySelector(".term").classList.remove("typing-on")});
 box.addEventListener("submit",e=>{e.preventDefault();send();ta.focus()});
-function send(){if(!ready)return;const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
+function send(){if(!ready||(MOCK_TEST&&(testSending||pend.judy)))return;const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
   set[app.active].draft="";ta.value="";size();sendText(text)}
-function sendText(text){const id=app.active;set[id].choices=null;saveSettings(id);
+async function sendText(text){
+  if(MOCK_TEST){
+    if(testSending||pend.judy)return;testSending=true;set.judy.choices=null;saveSettings("judy");renderLog();size();
+    const lines=text.split(/\r?\n/).filter(x=>x.trim());
+    try{for(let i=0;i<lines.length;i++){if(i)await sleep(650);await deliver("judy",lines[i],"v");toBottom()}
+      requestReply("judy",lines[lines.length-1]);
+    }finally{testSending=false;size()}
+    return;
+  }
+  const id=app.active;set[id].choices=null;saveSettings(id);
   const m={from:"v",text,t:clock.now()};addLocal(id,m);persistMsg(id,m);
   renderLog();toBottom();requestReply(id,text)}
 log.addEventListener("click",e=>{const o=e.target.closest(".opt");if(!o)return;const c=set[app.active].choices;if(c&&c[o.dataset.i]!=null)sendText(c[o.dataset.i])});
@@ -964,7 +975,7 @@ async function resetContact(id){
   const fresh={id,draft:"",unread:0,mode:set[id].mode,choices:null,seeded:true};
   try{
     await store.clearContact(id,fresh);
-    const now=clock.now(),seeded=await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
+    const now=clock.now(),seeded=await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.slice(0,1).map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
     set[id]=fresh;win[id]={msgs:seeded,hasMore:false,loading:false,loaded:true};lastMsg[id]=seeded[seeded.length-1]||null;
     failures.splice(0,failures.length,...failures.filter(f=>!f.key.includes(":"+id)));renderSbar();
   }catch(e){fail("reset:"+id,`${C[id].short}的重設沒有完成`,e,()=>resetContact(id))}
@@ -1095,25 +1106,20 @@ async function boot(){
     for(const id of ORDER){const s=await store.getSettings(id);if(s)set[id]={...set[id],...s,id}}
     for(const id of ORDER){
       if(!set[id].seeded){
-        if(await store.count(id)===0){const now=clock.now();await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
+        if(await store.count(id)===0){const now=clock.now();await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.slice(0,1).map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
         set[id].seeded=true;await store.putSettings({...set[id]});
       }
       const last=await store.latest(id,1);lastMsg[id]=last[0]||null;
     }
   }catch(e){fail("boot","初始資料讀取失敗",e,()=>location.reload())}
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}
-  if(MOCK_TEST){
-    app.active="judy";set.judy.mode="lover";
-    if(await store.count("judy")===(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.length:0)){
-      const firstV=activeScene.turns.find(t=>t.speaker==="V");set.judy.choices=firstV?[firstV.messages.join("\n")]:null;
-    }
-  }
+  if(MOCK_TEST){app.active="judy";set.judy.mode="lover";set.judy.choices=null}
   await openRoom(app.active);
   ready=true;renderHead();renderLog();ta.value=set[app.active].draft||"";size();toBottom();
   if(fatalErr)renderSbar();
 }
 async function restartMock(){
-  if(!MOCK_TEST||pend.judy)return;
+  if(!MOCK_TEST||pend.judy||testSending)return;
   await store.clearContact("judy",{...set.judy,seeded:false,draft:"",choices:null});location.reload();
 }
 function showMockPanel(){
@@ -1123,7 +1129,23 @@ function showMockPanel(){
   $("mockRestart").onclick=restartMock;
 }
 const readyP=boot().then(async()=>{
-  if(MOCK_TEST)showMockPanel();
+  if(MOCK_TEST){
+    showMockPanel();testSending=true;size();
+    try{
+      const initial=activeScene.turns[0],saved=await store.dumpContact("judy");
+      if(initial.speaker==="judy"&&saved.length<=initial.messages.length&&saved.every((m,i)=>m.from==="n"&&m.text===initial.messages[i])){
+        for(let i=saved.length;i<initial.messages.length;i++){setTyping("judy",true);await sleep(800);await deliver("judy",initial.messages[i])}
+        setTyping("judy",false);
+      }
+      const history=(await buildContext("judy")).recent,prefix=[];
+      if(!history.length&&initial.speaker==="V")set.judy.choices=[initial.messages.join("\n")];
+      for(let i=0;i<activeScene.turns.length;i++){
+        const turn=activeScene.turns[i];prefix.push(...turn.messages.map(text=>({role:turn.speaker==="V"?"user":"assistant",text})));
+        if(turn.speaker==="judy"&&activeScene.turns[i+1]?.speaker==="V"&&history.length>=prefix.length&&prefix.every((m,j)=>{const r=history[history.length-prefix.length+j];return r.role===m.role&&r.text===m.text}))set.judy.choices=[activeScene.turns[i+1].messages.join("\n")];
+      }
+      await saveSettings("judy");renderLog();
+    }finally{testSending=false;size()}
+  }
   await syncBackend("on_open");
   setInterval(()=>syncBackend("while_open"),60*1000);       /* 後端依實際時間差推進，不依賴計時器準時 */
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncBackend("while_open")});

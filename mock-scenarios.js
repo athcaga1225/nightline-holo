@@ -1,4 +1,4 @@
-// 使用者核准的專案原創公開Mock示範；非遊戲原文、非AI。
+// 使用者核准的專案原創公開Mock示範；每行一則，非遊戲原文、非AI。
 window.NIGHTLINE_MOCK_SCENARIOS=[
   {
     "id": "01-work-invite",
@@ -7,7 +7,8 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "V",
         "messages": [
-          "嘿，小茱。\n還在跟那段音訊吵架嗎？"
+          "嘿，小茱。",
+          "還在跟那段音訊吵架嗎？"
         ]
       },
       {
@@ -26,7 +27,8 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "judy",
         "messages": [
-          "好啊！\n等等，我今天是不是還沒吃東西⋯⋯"
+          "好啊！",
+          "等等，我今天是不是還沒吃東西⋯⋯"
         ]
       },
       {
@@ -38,7 +40,8 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "judy",
         "messages": [
-          "靠，幫我帶一份就好！\n晚點見<3"
+          "靠，幫我帶一份就好！",
+          "晚點見<3"
         ]
       }
     ]
@@ -50,19 +53,22 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "judy",
         "messages": [
-          "iHola, calabacita!\n你在幹嘛？"
+          "iHola, calabacita!",
+          "你在幹嘛？"
         ]
       },
       {
         "speaker": "V",
         "messages": [
-          "剛收到委託人的錢\n還以為那傢伙打算賴帳。"
+          "剛收到委託人的錢",
+          "還以為那傢伙打算賴帳。"
         ]
       },
       {
         "speaker": "judy",
         "messages": [
-          "哈哈，至少他還記得！\n今天還有其他工作嗎？"
+          "哈哈，至少他還記得！",
+          "今天還有其他工作嗎？"
         ]
       },
       {
@@ -74,13 +80,15 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "judy",
         "messages": [
-          "我剛剛也在想你<3\n可是手頭的案子還沒弄完 :("
+          "我剛剛也在想你<3",
+          "可是手頭的案子還沒弄完 :("
         ]
       },
       {
         "speaker": "V",
         "messages": [
-          "沒關係\n我現在去找你。"
+          "沒關係",
+          "我現在去找你。"
         ]
       }
     ]
@@ -92,13 +100,15 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "V",
         "messages": [
-          "嘿，小茱，要不要出門晃晃？\n我開車:)"
+          "嘿，小茱，要不要出門晃晃？",
+          "我開車:)"
         ]
       },
       {
         "speaker": "judy",
         "messages": [
-          "唔⋯⋯改天好不好？\n我才剛到家"
+          "唔⋯⋯改天好不好？",
+          "我才剛到家"
         ]
       },
       {
@@ -110,7 +120,8 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "judy",
         "messages": [
-          "有一點\n今天不想再看到夜城那些混蛋了。"
+          "有一點",
+          "今天不想再看到夜城那些混蛋了。"
         ]
       },
       {
@@ -122,7 +133,9 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "judy",
         "messages": [
-          "你還是可以過來啊！\n我又沒說不想見你。\n笨蛋<3"
+          "你還是可以過來啊！",
+          "我又沒說不想見你。",
+          "笨蛋<3"
         ]
       }
     ]
@@ -134,7 +147,8 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "judy",
         "messages": [
-          "嘿 V。\n不是說快結束了嗎？"
+          "嘿 V。",
+          "不是說快結束了嗎？"
         ]
       },
       {
@@ -152,19 +166,22 @@ window.NIGHTLINE_MOCK_SCENARIOS=[
       {
         "speaker": "V",
         "messages": [
-          "沒事，剛處理完，準備回去了。\n抱歉，讓你等這麼久"
+          "沒事，剛處理完，準備回去了。",
+          "抱歉，讓你等這麼久"
         ]
       },
       {
         "speaker": "judy",
         "messages": [
-          "呼⋯⋯好吧，下次早點跟我說\n我還以為你出了什麼事。"
+          "呼⋯⋯好吧，下次早點跟我說",
+          "我還以為你出了什麼事。"
         ]
       },
       {
         "speaker": "V",
         "messages": [
-          "好，你先吃飯。\n不用等我"
+          "好，你先吃飯。",
+          "不用等我"
         ]
       },
       {
