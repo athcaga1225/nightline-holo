@@ -323,7 +323,7 @@ const C={
         worry:["V，你現在安全嗎？","等一下，你人在哪？可以講電話嗎？"],
         tired:[["你要是累了，就先去躺一下。","我還在剪片，晚點想講話再敲我。"],"今天怎麼了？你想講的話，我在。"],
         bye:["好，晚點聊。","嗯。等你有空再敲我。"],
-        any:["嗯，我在。","等等，我重看一下你剛傳的。"],
+        any:["欸，V。我在聽。","等我一下，我把耳機拿下來。好，你說。"],
         dayOff:[["那下次再陪我去潛水？","這次不用錄幻舞。就下去晃晃。"]]}},
     t:[["個性","直率、心軟，看不慣欺負人的事；講到在乎的事會變笨拙"],["語氣","口語、愛吐槽，常用 -.- ;) xD <3 和「……」"],["回覆","短句連發，害羞時拆得更碎"]],
     seed:[[-985,"n","V，還醒著嗎？"],[-984,"n","上次那段幻舞我處理好了，畫面乾淨多了。"],[-981,"v","醒著。搞定就好，辛苦了。"],[-980,"n","下次陪我測試，別想偷溜 ;)"]],
@@ -615,6 +615,9 @@ const judySleepReplies = {
 function mockCompose(id,text,recent,mode){
   const lv=C[id].lover&&mode==="lover"?C[id].lover.pool:null,p=lv?{...C[id].pool,...lv}:C[id].pool,lastNpc=[...recent].reverse().find(m=>m.role==="assistant");
   if(id==="judy" && mode==="lover"){
+    if(/^\s*(?:我)?來報到了?[。！!]?\s*(?:;\))?\s*$/.test(text)){
+      return {messages:["好，算你有到。","今天怎麼這麼乖？"],k:"checkIn"};
+    }
     if(/^\s*(?:你|妳)?\s*(?:昨晚|昨天)?\s*睡得(?:比較)?好嗎[？?。]?\s*$/.test(text)){
       return {messages:[judySleepReplies.slept],k:"sleep"};
     }
@@ -663,7 +666,7 @@ const CHOICES={
       any:["哈，真的假的","然後呢？","我晚點打給你"]}}};
 const lastChoiceTurn={};
 function mockChoices(id,k,mode){
-  if(k==="sleep" || (id==="judy" && mode==="lover" && ["dayOff","q","any"].includes(k))){lastChoiceTurn[id]=false;return null}
+  if(k==="sleep" || (id==="judy" && mode==="lover" && ["dayOff","q","any","checkIn"].includes(k))){lastChoiceTurn[id]=false;return null}
   const bank=CHOICES[id]&&CHOICES[id][mode==="lover"?"lover":"friend"];
   if(!bank||lastChoiceTurn[id]||R()>.4){lastChoiceTurn[id]=false;return null}
   lastChoiceTurn[id]=true;return (bank[k]||bank.any).slice();
