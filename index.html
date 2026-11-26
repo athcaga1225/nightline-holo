@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-card-layers-11">
+<meta name="nightline-version" content="mock-avatar-angle-12">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -48,7 +48,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .term{width:clamp(500px,40vw,660px);display:flex;flex-direction:column;min-height:0}
 
 /* ---------- 標題列 ---------- */
-.head{display:grid;grid-template-columns:var(--gut) minmax(0,1fr);align-items:end}
+.head{display:grid;grid-template-columns:calc(var(--gut) + 10px) minmax(0,1fr);align-items:end}
 .idslot{position:relative;height:92px;display:flex;align-items:flex-end;gap:10px;padding-bottom:2px}
 .phone{width:14px;color:var(--header-cyan);opacity:.75;margin-bottom:14px;flex:none}
 .idc{position:relative;width:50px;height:76px;flex:none;transform:perspective(260px) rotateY(20deg);transform-origin:left center}
@@ -61,6 +61,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .idc>.layer-75{transform:translate(3px,-4px);opacity:.75;z-index:3}
 .idc>.card-front{opacity:1;z-index:4;filter:none}
 .idc.judy-card{transform:perspective(400px) rotateY(-7deg) skewY(4deg)}
+.head .idc{transform:perspective(300px) rotateY(30deg) skewY(12deg);transform-origin:left center}
 
 
 .judy-card b{border-color:#b14b51;background:linear-gradient(155deg,#80343a,#42171d 65%,#63242a);box-shadow:inset 0 0 0 2px #3b171b}
@@ -216,7 +217,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   body{font-size:16px}
   .stage{padding:0;gap:0}
   .term{width:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
-  .head{grid-template-columns:66px minmax(0,1fr)}
+  .head{grid-template-columns:74px minmax(0,1fr)}
   .idslot{height:58px;gap:8px}.phone{display:block;width:13px}
   .idc{width:32px;height:48px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
   .tab{font-size:18px}.who{font-size:18px}.sep{width:16px}
