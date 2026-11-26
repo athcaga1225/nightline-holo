@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-clean-options-6">
+<meta name="nightline-version" content="mock-clean-layout-7">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -230,8 +230,6 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
 #dbg dl{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:3px 8px;margin:0}#dbg dt{color:var(--mute)}#dbg dd{margin:0}
 #dbg .dbtn{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}#dbg button,#dbg select,#dbg input{font:inherit;color:#d8e4e2;background:#1d0a0d;border:1px solid var(--red-d);padding:4px 8px;min-height:30px}
 #dbg .dbev{margin:0;padding-left:1.2em}#dbg .dbev span{color:var(--mute)}#dbg pre{white-space:pre-wrap;word-break:break-all;margin:0;color:#9fd6d6;font-size:12px}
-.mock-panel{border:1px solid var(--red-d);padding:10px 12px;margin:10px 0;background:rgba(20,3,6,.85);font-size:12px;flex-shrink:0}
-.mock-panel[hidden]{display:none}.mock-panel strong{color:var(--npc-t)}.mock-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:7px}.mock-controls button,.mock-controls a{color:var(--v);text-decoration:underline}.mock-panel p{margin:7px 0 0;color:var(--mute);line-height:1.4}
 </style>
 </head>
 <body>
@@ -253,11 +251,6 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
       </div>
     </header>
 
-    <section id="mockPanel" class="mock-panel" hidden aria-label="原創對話測試">
-      <strong>對話測試 · Mock，非 AI</strong>
-      <div class="mock-controls"><button id="mockRestart" type="button">重新開始</button><a href="./">回一般聊天</a></div>
-      <p id="mockStatus">點下方建議的 V 台詞即可繼續，也可自由輸入。這是固定台詞示範；測試紀錄獨立保存。</p>
-    </section>
     <div class="body">
       <div></div>
       <div class="logwrap">
@@ -330,7 +323,7 @@ function approvedMock(recent,strict=false){
         if(turn.speaker==="V"){
           if(j+1<turn.messages.length)return {messages:[],choices:[turn.messages[j+1]],awaitingV:true};
           const next=scene.turns[i+1];
-          if(!next){if(MOCK_TEST)$("mockStatus").textContent="這組示範已結束，可以重新開始";return {messages:[],choices:null,finished:true}}
+          if(!next){return {messages:[],choices:null,finished:true}}
           const following=scene.turns[i+2];
           return {messages:next.messages.slice(),choices:following?.speaker==="V"?[following.messages[0]]:null};
         }
@@ -1126,13 +1119,9 @@ async function restartMock(){
   if(!MOCK_TEST||pend.judy||testSending)return;
   await store.clearContact("judy",{...set.judy,seeded:false,draft:"",choices:null});location.reload();
 }
-function showMockPanel(){
-  const panel=$("mockPanel");panel.hidden=false;
-  $("mockRestart").onclick=restartMock;
-}
 const readyP=boot().then(async()=>{
   if(MOCK_TEST){
-    showMockPanel();testSending=true;size();
+    testSending=true;size();
     try{
       const initial=activeScene.turns[0],saved=await store.dumpContact("judy");
       if(initial.speaker==="judy"&&saved.length<=initial.messages.length&&saved.every((m,i)=>m.from==="n"&&m.text===initial.messages[i])){
