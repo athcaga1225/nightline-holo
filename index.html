@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="portrait-spacing-padding-18">
+<meta name="nightline-version" content="portrait-image-chat-gap-19">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -73,7 +73,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .judy-card b{border-color:#b14b51;background:linear-gradient(155deg,#80343a,#42171d 65%,#63242a);box-shadow:inset 0 0 0 2px #3b171b}
 .judy-card b::before{inset:3px 3px auto;width:auto;height:3px;background:#c85559;opacity:.65}
 .judy-avatar{display:block;width:calc(100% - 4px);aspect-ratio:1;object-fit:contain}
-.head .judy-avatar{width:calc(100% - 12px)}
+.head .judy-avatar{position:absolute;left:4px;top:6px;width:calc(100% - 8px);height:calc(100% - 20px);aspect-ratio:auto;object-fit:cover}
 
 
 .idc b::after{content:attr(data-code);position:absolute;left:4px;bottom:3px;font:600 8px/1 Rajdhani,sans-serif;letter-spacing:.06em;color:rgba(255,220,220,.7)}
@@ -95,7 +95,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .redl span{position:absolute;right:0;bottom:5px;font-size:9px;color:rgba(217,70,78,.45);white-space:nowrap}
 
 /* ---------- 對話區 ---------- */
-.body{flex:1;min-height:0;display:grid;grid-template-columns:var(--gut) minmax(0,1fr);margin-top:18px}
+.body{flex:1;min-height:0;display:grid;grid-template-columns:var(--gut) minmax(0,1fr);margin-top:40px}
 .logwrap{position:relative;min-height:0;display:flex;flex-direction:column}
 .log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 20px 18px 6px;
   border-right:1px solid var(--red-f);overflow-anchor:none;scrollbar-width:thin;scrollbar-color:var(--red) transparent}
@@ -234,7 +234,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   .redl{min-width:8px}
   .redl span{display:none}
   #sysId{display:none}.sys{gap:8px}
-  .body{margin-top:12px}
+  .body{margin-top:32px}
   .log{padding:4px 10px 14px 2px}
   .bub{max-width:86%}
   .hints{gap:4px 14px}.hint.static{display:none}.note{font-size:10px}
