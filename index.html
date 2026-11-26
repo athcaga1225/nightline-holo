@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="portrait-upright-controls-17">
+<meta name="nightline-version" content="portrait-spacing-padding-18">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -65,14 +65,15 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 /* 保持卡片側邊直立；水平透視搭配上下斜邊，四層向右後方展開。 */
 .head .idc{width:60px;height:91px;transform-style:preserve-3d;transform:perspective(500px) rotateY(36deg) skewY(24deg);transform-origin:left center}
 .head .idc>.card-front{transform:translateZ(0)}
-.head .idc>.layer-25{transform:translate3d(48px,-36px,-36px)}
-.head .idc>.layer-50{transform:translate3d(32px,-24px,-24px)}
-.head .idc>.layer-75{transform:translate3d(16px,-12px,-12px)}
+.head .idc>.layer-25{transform:translate3d(72px,-54px,-54px)}
+.head .idc>.layer-50{transform:translate3d(48px,-36px,-36px)}
+.head .idc>.layer-75{transform:translate3d(24px,-18px,-18px)}
 
 
 .judy-card b{border-color:#b14b51;background:linear-gradient(155deg,#80343a,#42171d 65%,#63242a);box-shadow:inset 0 0 0 2px #3b171b}
 .judy-card b::before{inset:3px 3px auto;width:auto;height:3px;background:#c85559;opacity:.65}
 .judy-avatar{display:block;width:calc(100% - 4px);aspect-ratio:1;object-fit:contain}
+.head .judy-avatar{width:calc(100% - 12px)}
 
 
 .idc b::after{content:attr(data-code);position:absolute;left:4px;bottom:3px;font:600 8px/1 Rajdhani,sans-serif;letter-spacing:.06em;color:rgba(255,220,220,.7)}
