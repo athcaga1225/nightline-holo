@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-option-alignment-14">
+<meta name="nightline-version" content="mock-minute-groups-15">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -49,7 +49,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 
 /* ---------- 標題列 ---------- */
 .head{display:grid;grid-template-columns:calc(var(--gut) + 10px) minmax(0,1fr);align-items:end}
-.idslot{position:relative;height:92px;display:flex;align-items:flex-end;gap:10px;padding-bottom:2px}
+.idslot{position:relative;height:106px;display:flex;align-items:flex-end;gap:10px;padding-bottom:2px}
 .phone{width:16px;color:var(--header-cyan);opacity:1;margin-bottom:14px;flex:none}
 .idc{position:relative;width:50px;height:76px;flex:none;transform:perspective(260px) rotateY(20deg);transform-origin:left center}
 
@@ -61,7 +61,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .idc>.layer-75{transform:translate(3px,-4px);opacity:.75;z-index:3}
 .idc>.card-front{opacity:1;z-index:4;filter:none}
 .idc.judy-card{transform:perspective(400px) rotateY(-7deg) skewY(4deg)}
-.head .idc{transform:perspective(300px) rotateY(38deg) skewY(18deg);transform-origin:left center}
+.head .idc{width:60px;height:91px;transform:perspective(300px) rotateY(38deg) skewY(18deg);transform-origin:left center}
 .head .idc>.layer-25{transform:translate(18px,-24px)}
 .head .idc>.layer-50{transform:translate(12px,-16px)}
 .head .idc>.layer-75{transform:translate(6px,-8px)}
@@ -115,6 +115,8 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .stamp{font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#6a8f93;margin:5px 1px 0;white-space:nowrap}
 .choices{display:flex;flex-direction:column;align-items:flex-end;gap:7px;margin-top:14px;padding:0 0 16px}
 .day+.choices{margin-top:0}
+.grp.awaiting-choice .stamp{display:none}
+.grp.awaiting-choice+.choices{margin-top:6px}
 .opt{position:relative;max-width:min(86%,34em);padding:3px 9px 8px 12px;text-align:left;font-size:16px;line-height:1.5;color:rgba(120,223,184,.62);background:none}
 .opt svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .opt svg path{stroke:rgba(78,153,126,.55);fill:transparent;transition:fill .12s,stroke .12s}
@@ -222,8 +224,8 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   .stage{padding:0;gap:0}
   .term{width:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
   .head{grid-template-columns:74px minmax(0,1fr)}
-  .idslot{height:72px;gap:8px}.phone{display:block;width:14px}
-  .idc{width:32px;height:48px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
+  .idslot{height:84px;gap:8px}.phone{display:block;width:14px}
+  .idc{width:32px;height:48px}.head .idc{width:38px;height:58px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
   .tab{font-size:18px}.who{font-size:18px}.sep{width:16px}
   .redl{min-width:8px}
   .redl span{display:none}
@@ -812,20 +814,21 @@ function cardHTML(id){const c=C[id],content=id==="judy"?`<img class="judy-avatar
 /* ---- 繪製 ---- */
 function renderLog(){
   const id=app.active,W=win[id],L=W.msgs;let h="",prev=null,grp=[];
+  const ch=!typing[id]&&set[id].choices;
+  const last=L[L.length-1],joiningChoice=ch?.length&&last?.from==="v"&&Math.floor(last.t/60000)===Math.floor(clock.now()/60000);
   if(!L.length&&set[id].choices?.length)h+=`<div class="day">${dayLabel(clock.now())}</div>`;
   if(W.hasMore)h+=`<div class="day more">${W.loading?"載入更早的訊息…":"往上捲動載入更早的訊息"}</div>`;
   const flush=()=>{if(!grp.length)return;const f=grp[0].from,bad=grp.some(m=>m.failed);
-    h+=`<div class="grp ${f==="v"?"v":"n"}">`+grp.map(m=>bub(f==="v"?"v":"n",`<span class="tx">${esc(m.text)}</span>`)).join("")
+    h+=`<div class="grp ${f==="v"?"v":"n"}${joiningChoice&&grp[grp.length-1]===last?" awaiting-choice":""}">`+grp.map(m=>bub(f==="v"?"v":"n",`<span class="tx">${esc(m.text)}</span>`)).join("")
       +`<div class="stamp en">${hm(grp[grp.length-1].t)}${bad?`<span class="bad">未儲存</span>`:""}</div></div>`;grp=[]};
   L.forEach(m=>{
     if(m.from==="sys"){flush();h+=`<div class="sysm" role="status">${esc(m.text)}</div>`;prev=m;return}
     if(!prev||dayKey(prev.t)!==dayKey(m.t)){flush();h+=`<div class="day">${dayLabel(m.t)}</div>`}
-    else if(prev.from!==m.from||m.t-prev.t>6*60000||(m.from==="v"&&m.src==="choice"))flush();
+    else if(prev.from!==m.from||m.t-prev.t>6*60000||(m.from==="v"&&Math.floor(m.t/60000)!==Math.floor(prev.t/60000)))flush();
     grp.push(m);prev=m});
   flush();
   if(typing[id]){const join=prev&&prev.from==="n";
     h+=`<div class="grp n${join?" join":""}">`+bub("n",`<span class="dots"><i></i><i></i><i></i></span><span class="sr">${esc(C[id].short)} 輸入中</span>`)+`</div>`}
-  const ch=!typing[id]&&set[id].choices;
   if(ch&&ch.length)h+=`<div class="choices" role="group" aria-label="快速回覆">`+
     ch.map((t,i)=>`<button class="opt" data-k="v" data-i="${i}"><svg aria-hidden="true"><path stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg><span class="tx">${esc(t)}</span></button>`).join("")+`</div>`;
   ro.disconnect();log.innerHTML=h;log.querySelectorAll(".bub,.opt").forEach(b=>{draw(b);ro.observe(b)});
