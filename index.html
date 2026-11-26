@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-clean-options-5">
+<meta name="nightline-version" content="mock-clean-options-6">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -106,7 +106,6 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .bub .tx{position:relative;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
 .stamp{font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#6a8f93;margin:5px 1px 0;white-space:nowrap}
 .choices{display:flex;flex-direction:column;align-items:flex-end;gap:7px;margin-top:16px;padding-right:0}
-.choices .lead{font-size:11px;color:var(--mute);margin-right:2px}
 .opt{position:relative;max-width:min(92%,34em);padding:3px 12px 8px 9px;text-align:left;font-size:16px;line-height:1.5;color:rgba(120,223,184,.62);background:none}
 .opt svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .opt svg path{stroke:rgba(78,153,126,.55);fill:transparent;transition:fill .12s,stroke .12s}
@@ -817,7 +816,7 @@ function renderLog(){
   if(typing[id]){const join=prev&&prev.from==="n";
     h+=`<div class="grp n${join?" join":""}">`+bub("n",`<span class="dots"><i></i><i></i><i></i></span><span class="sr">${esc(C[id].short)} 輸入中</span>`)+`</div>`}
   const ch=!typing[id]&&set[id].choices;
-  if(ch&&ch.length)h+=`<div class="choices" role="group" aria-label="快速回覆"><span class="lead">選一個回覆，或直接輸入</span>`+
+  if(ch&&ch.length)h+=`<div class="choices" role="group" aria-label="快速回覆">`+
     ch.map((t,i)=>`<button class="opt" data-k="v" data-i="${i}"><svg aria-hidden="true"><path stroke-width="1" stroke-linejoin="miter" shape-rendering="geometricPrecision"/></svg><span class="tx">${esc(t)}</span></button>`).join("")+`</div>`;
   ro.disconnect();log.innerHTML=h;log.querySelectorAll(".bub,.opt").forEach(b=>{draw(b);ro.observe(b)});
 }
