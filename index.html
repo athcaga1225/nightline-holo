@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-reference-spacing-13">
+<meta name="nightline-version" content="mock-option-alignment-14">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -94,7 +94,7 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .body{flex:1;min-height:0;display:grid;grid-template-columns:var(--gut) minmax(0,1fr);margin-top:18px}
 .logwrap{position:relative;min-height:0;display:flex;flex-direction:column}
 .log{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 20px 18px 6px;
-  border-right:1px solid var(--red-f);scrollbar-width:thin;scrollbar-color:var(--red) transparent}
+  border-right:1px solid var(--red-f);overflow-anchor:none;scrollbar-width:thin;scrollbar-color:var(--red) transparent}
 .log::-webkit-scrollbar{width:3px}
 .log::-webkit-scrollbar-thumb{background:var(--red)}
 .log::-webkit-scrollbar-track{background:transparent}
@@ -113,8 +113,9 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .bub svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .bub .tx{position:relative;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
 .stamp{font:11px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:#6a8f93;margin:5px 1px 0;white-space:nowrap}
-.choices{display:flex;flex-direction:column;align-items:flex-end;gap:7px;margin-top:16px;padding-right:0}
-.opt{position:relative;max-width:min(92%,34em);padding:3px 12px 8px 9px;text-align:left;font-size:16px;line-height:1.5;color:rgba(120,223,184,.62);background:none}
+.choices{display:flex;flex-direction:column;align-items:flex-end;gap:7px;margin-top:14px;padding:0 0 16px}
+.day+.choices{margin-top:0}
+.opt{position:relative;max-width:min(86%,34em);padding:3px 9px 8px 12px;text-align:left;font-size:16px;line-height:1.5;color:rgba(120,223,184,.62);background:none}
 .opt svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .opt svg path{stroke:rgba(78,153,126,.55);fill:transparent;transition:fill .12s,stroke .12s}
 .opt .tx{position:relative;display:block;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -449,7 +450,7 @@ const txDone=t=>new Promise((res,rej)=>{t.oncomplete=()=>res();t.onerror=()=>rej
   t.onabort=()=>rej(t.error||new DOMException("寫入已中止","AbortError"))});
 const krange=id=>IDBKeyRange.bound([id],[id,[]]);            /* [id, 任何值] 的完整範圍 */
 const msgKey=m=>m.from+"\u0001"+m.t+"\u0001"+m.text;          /* 判斷重複：同發話者、同時間、同內容 */
-const MSG_EXTRA=["src","trigger","phase","genAt","eventAt"];   /* 主動訊息：來源、觸發事件、產生階段、實際產生時間、虛構事件時間 */
+const MSG_EXTRA=["src","trigger","phase","genAt","eventAt"];   /* 訊息來源，以及主動訊息的事件與時間資訊 */
 const cleanMsg=m=>{const o={from:m.from,text:m.text,t:m.t};for(const k of MSG_EXTRA)if(m[k]!=null)o[k]=m[k];return o};
 function sortChrono(list){return list.map((m,i)=>[m,i]).sort((a,b)=>a[0].t-b[0].t||a[1]-b[1]).map(x=>x[0])}
 
@@ -811,6 +812,7 @@ function cardHTML(id){const c=C[id],content=id==="judy"?`<img class="judy-avatar
 /* ---- 繪製 ---- */
 function renderLog(){
   const id=app.active,W=win[id],L=W.msgs;let h="",prev=null,grp=[];
+  if(!L.length&&set[id].choices?.length)h+=`<div class="day">${dayLabel(clock.now())}</div>`;
   if(W.hasMore)h+=`<div class="day more">${W.loading?"載入更早的訊息…":"往上捲動載入更早的訊息"}</div>`;
   const flush=()=>{if(!grp.length)return;const f=grp[0].from,bad=grp.some(m=>m.failed);
     h+=`<div class="grp ${f==="v"?"v":"n"}">`+grp.map(m=>bub(f==="v"?"v":"n",`<span class="tx">${esc(m.text)}</span>`)).join("")
@@ -818,7 +820,7 @@ function renderLog(){
   L.forEach(m=>{
     if(m.from==="sys"){flush();h+=`<div class="sysm" role="status">${esc(m.text)}</div>`;prev=m;return}
     if(!prev||dayKey(prev.t)!==dayKey(m.t)){flush();h+=`<div class="day">${dayLabel(m.t)}</div>`}
-    else if(prev.from!==m.from||m.t-prev.t>6*60000)flush();
+    else if(prev.from!==m.from||m.t-prev.t>6*60000||(m.from==="v"&&m.src==="choice"))flush();
     grp.push(m);prev=m});
   flush();
   if(typing[id]){const join=prev&&prev.from==="n";
@@ -938,11 +940,11 @@ ta.addEventListener("blur",()=>{box.classList.remove("f");document.querySelector
 box.addEventListener("submit",e=>{e.preventDefault();send();ta.focus()});
 function send(){if(!ready||(MOCK_TEST&&(testSending||pend.judy)))return;const text=ta.value.replace(/\s+$/,"").replace(/^\s*\n/,"");if(!text.trim())return;
   set[app.active].draft="";ta.value="";size();sendText(text)}
-async function sendText(text){
+async function sendText(text,fromChoice=false){
   if(MOCK_TEST){
-    if(testSending||pend.judy)return;testSending=true;set.judy.choices=null;saveSettings("judy");renderLog();size();
+    if(testSending||pend.judy)return;testSending=true;set.judy.choices=null;saveSettings("judy");log.querySelectorAll(".opt").forEach(b=>b.disabled=true);size();
     const lines=text.split(/\r?\n/).filter(x=>x.trim());
-    try{for(let i=0;i<lines.length;i++){if(i)await sleep(650);await deliver("judy",lines[i],"v");toBottom()}
+    try{for(let i=0;i<lines.length;i++){if(i)await sleep(650);await deliver("judy",lines[i],"v",fromChoice?{src:"choice"}:undefined);toBottom()}
       const step=approvedMock((await buildContext("judy")).recent);
       if(step?.awaitingV||step?.finished){set.judy.choices=step.choices;await saveSettings("judy");renderLog();toBottom()}
       else requestReply("judy",lines[lines.length-1]);
@@ -950,9 +952,10 @@ async function sendText(text){
     return;
   }
   const id=app.active;set[id].choices=null;saveSettings(id);
-  const m={from:"v",text,t:clock.now()};addLocal(id,m);persistMsg(id,m);
+  const m={from:"v",text,t:clock.now(),...(fromChoice?{src:"choice"}:{})};addLocal(id,m);persistMsg(id,m);
   renderLog();toBottom();requestReply(id,text)}
-log.addEventListener("click",e=>{const o=e.target.closest(".opt");if(!o)return;const c=set[app.active].choices;if(c&&c[o.dataset.i]!=null)sendText(c[o.dataset.i])});
+log.addEventListener("pointerdown",e=>{if(document.activeElement===ta&&e.target.closest(".opt"))e.preventDefault()});
+log.addEventListener("click",e=>{const o=e.target.closest(".opt");if(!o)return;const c=set[app.active].choices;if(c&&c[o.dataset.i]!=null)sendText(c[o.dataset.i],true)});
 log.addEventListener("keydown",e=>{const o=e.target.closest(".opt");if(!o||!/^Arrow(Up|Down)$/.test(e.key))return;e.preventDefault();
   const all=[...log.querySelectorAll(".opt")],n=all.indexOf(o)+(e.key==="ArrowDown"?1:-1);(all[n]||o).focus()});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&ready)ORDER.forEach(id=>{if(setTimers[id]){clearTimeout(setTimers[id]);setTimers[id]=0;saveSettings(id)}})});

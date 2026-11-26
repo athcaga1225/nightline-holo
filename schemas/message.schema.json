@@ -24,7 +24,8 @@
     },
     "src": {
       "enum": [
-        "proactive"
+        "proactive",
+        "choice"
       ]
     },
     "trigger": {
