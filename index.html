@@ -313,17 +313,18 @@ const C={
     lover:{
       rel:"在一起的戀人。嘴上還是愛吐槽，但會主動說想你、擔心你，講到心裡話就害羞。",
       pool:{
-        greet:[["嗨","剛好在想你，你就出現了"],["在啊","等你等到我都把整段素材剪完了 -.-"],["早","昨晚有沒有好好睡？不准說謊"],["你終於上線了","我是說……嗨 ;)"]],
-        love:[["……","你怎麼突然這樣","我也是啦 -.-"],["我也想你","超想。"],["過來","讓我抱一下就好"],["我也想你，calabacita",";)"]],
-        q:[["嗯……","你這樣問，我要認真想一下"],["你問我喔？","答案大概是：跟你一起的話都可以 xD"],["我不知道耶","見面的時候再告訴你，好不好"]],
-        thx:[["跟我還客氣什麼","……不過我收下了 <3"],["這有什麼","你開心我就開心啊"]],
-        praise:[["等等","你不要一直這樣講","我會整個人縮進椅子裡 -.-"],["……","你明知道我接不了這種話"],["好啦","你也是。超級是。"]],
-        sorry:[["傻瓜","我又沒有生氣"],["好啦，原諒你","但你欠我一個抱抱"]],
-        work:[["今天的素材很難搞","但我一邊剪一邊想到你，就沒那麼煩了"],["我剛完成一段","你是第一個能看的人，誰都不給"]],
-        worry:[["V","你現在在哪？有沒有受傷？"],["我不想聽你說沒事","你先回家，我等你"],["拜託你小心一點","我不想再接到那種電話了"]],
-        tired:[["那就快去睡","我陪你，等你睡著再下線"],["過來吧","我這邊的沙發借你，枕頭也借你"]],
-        bye:[["好","晚安，夢裡見 <3"],["嗯，去吧","明天換我先傳訊息給你"],["掰掰","……還是有點捨不得 -.-"]],
-        any:["嗯哼，繼續說，我在聽","好啦好啦，都聽你的 <3",["哈哈哈","你怎麼這麼好笑"],["我剛剛在想","下次放假我們去海邊吧，就我們兩個"],["你知道嗎","有你在，夜城好像沒那麼吵了"],["……","沒事，只是想多看一下你的訊息"]]}},
+        greet:["嘿，V。",["在。","等我一下，我先把這段存起來。"],["你終於上線了","我是說……嗨 ;)"]],
+        love:[["……","你怎麼突然這樣","我也是啦 -.-"],["我也想你","超想。"],["我也想你，calabacita","晚點能講電話嗎？"]],
+        q:["先等等，我想一下。","嗯……你再多說一點？"],
+        thx:["跟我還客氣什麼。","好啦，收下了 :)"],
+        praise:[["……你一定要挑我沒準備的時候講嗎？","好啦。謝了。"],"哈。再說一次，我剛剛沒聽清楚 ;)"],
+        sorry:["等一下。你是為了哪件事道歉？","我有在聽。你想先從哪裡說？"],
+        work:[["你那邊怎麼了？","我這邊有一秒的雜音，重聽了二十遍。現在閉上眼睛都聽得到。"],["我剛剪完第一版。","晚點傳你。哪裡怪就直接講，別光說好看。"]],
+        worry:["V，你現在安全嗎？","等一下，你人在哪？可以講電話嗎？"],
+        tired:[["你要是累了，就先去躺一下。","我還在剪片，晚點想講話再敲我。"],"今天怎麼了？你想講的話，我在。"],
+        bye:["好，晚點聊。","嗯。等你有空再敲我。"],
+        any:["嗯，我在。","等等，我重看一下你剛傳的。"],
+        dayOff:[["那下次再陪我去潛水？","這次不用錄幻舞。就下去晃晃。"]]}},
     t:[["個性","直率、心軟，看不慣欺負人的事；講到在乎的事會變笨拙"],["語氣","口語、愛吐槽，常用 -.- ;) xD <3 和「……」"],["回覆","短句連發，害羞時拆得更碎"]],
     seed:[[-985,"n","V，還醒著嗎？"],[-984,"n","上次那段幻舞我處理好了，畫面乾淨多了。"],[-981,"v","醒著。搞定就好，辛苦了。"],[-980,"n","下次陪我測試，別想偷溜 ;)"]],
     pool:{
@@ -607,8 +608,8 @@ const BackendProvider={
 };
 /* 茱蒂戀人模式的雙回合示範。第二段只接在第一段後面。 */
 const judySleepReplies = {
-  slept: "有。醒來才發現我把鬧鐘按掉三次。",
-  alarm: ["有啊。第三個叫「再不起來就不准喝咖啡」。", "我還是喝了xD"]
+  slept: "有，醒來才發現我把鬧鐘按掉三次。",
+  alarm: ["有啊！第三個鬧鐘叫「再不起來就不准喝咖啡」。", "我還是喝了xD"]
 };
 /* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
 function mockCompose(id,text,recent,mode){
@@ -617,7 +618,7 @@ function mockCompose(id,text,recent,mode){
     if(/^\s*(?:你|妳)?\s*(?:昨晚|昨天)?\s*睡得(?:比較)?好嗎[？?。]?\s*$/.test(text)){
       return {messages:[judySleepReplies.slept],k:"sleep"};
     }
-    if(lastNpc?.text===judySleepReplies.slept && /^\s*(?:你|妳)?\s*(?:居然|竟然)?\s*有設鬧鐘[？?。！!]?\s*$/.test(text)){
+    if([judySleepReplies.slept,"有。醒來才發現我把鬧鐘按掉三次。"].includes(lastNpc?.text) && /^\s*(?:你|妳)?\s*(?:居然|竟然)?\s*有設鬧鐘[？?。！!]?\s*$/.test(text)){
       return {messages:judySleepReplies.alarm.slice(),k:"sleep"};
     }
   }
@@ -629,6 +630,7 @@ function mockCompose(id,text,recent,mode){
     ["praise",/好棒|厲害|可愛|漂亮|好讚|佩服|超強/],
     ["worry",/受傷|流血|打架|危險|中槍|開槍|出事|醫院/],
     ["tired",/累|睏|好煩|撐不住/],
+    ["dayOff",/^(?:你)?(?:下次|下回)?(?:放假|休假)(?:想|要)(?:去哪(?:裡)?|做什麼)[？?。]?$/],
     ["work",/幻舞|剪片|工作|案子|編輯|渲染/],
     ["greet",/^\s*(嗨|哈囉|安安|早安?|在嗎|在不在|hi|hey|hello)/i],
     ["q",/[?？]|嗎|呢$|怎麼|為什麼|要不要/]];
@@ -637,7 +639,7 @@ function mockCompose(id,text,recent,mode){
   let x;for(let i=0;i<6;i++){x=p[k][Math.floor(R()*p[k].length)];if(first(x)!==avoid)break}
   if(Array.isArray(x))return {messages:x.slice(),k};
   const out=[x];
-  if(R()<.3){const y=p.any.filter(v=>!Array.isArray(v)&&v!==x);if(y.length)out.push(y[Math.floor(R()*y.length)])}
+  if(!(id==="judy" && mode==="lover") && R()<.3){const y=p.any.filter(v=>!Array.isArray(v)&&v!==x);if(y.length)out.push(y[Math.floor(R()*y.length)])}
   return {messages:out,k};
 }
 /* 模擬模式：約四成機率給三個回覆選項，依剛才的情境挑；連續兩輪不重複出現 */
@@ -661,7 +663,7 @@ const CHOICES={
       any:["哈，真的假的","然後呢？","我晚點打給你"]}}};
 const lastChoiceTurn={};
 function mockChoices(id,k,mode){
-  if(k==="sleep"){lastChoiceTurn[id]=false;return null}
+  if(k==="sleep" || (id==="judy" && mode==="lover" && ["dayOff","q","any"].includes(k))){lastChoiceTurn[id]=false;return null}
   const bank=CHOICES[id]&&CHOICES[id][mode==="lover"?"lover":"friend"];
   if(!bank||lastChoiceTurn[id]||R()>.4){lastChoiceTurn[id]=false;return null}
   lastChoiceTurn[id]=true;return (bank[k]||bank.any).slice();
