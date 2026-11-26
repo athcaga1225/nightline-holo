@@ -605,9 +605,22 @@ const BackendProvider={
     return Array.isArray(j.messages)?j.messages:[];
   }
 };
+/* 茱蒂戀人模式的雙回合示範。第二段只接在第一段後面。 */
+const judySleepReplies = {
+  slept: "有。醒來才發現我把鬧鐘按掉三次。",
+  alarm: ["有啊。第三個叫「再不起來就不准喝咖啡」。", "我還是喝了xD"]
+};
 /* 模擬模式專用：依關鍵字挑預設台詞，不重複上一句 */
 function mockCompose(id,text,recent,mode){
   const lv=C[id].lover&&mode==="lover"?C[id].lover.pool:null,p=lv?{...C[id].pool,...lv}:C[id].pool,lastNpc=[...recent].reverse().find(m=>m.role==="assistant");
+  if(id==="judy" && mode==="lover"){
+    if(/^\s*(?:你|妳)?\s*(?:昨晚|昨天)?\s*睡得(?:比較)?好嗎[？?。]?\s*$/.test(text)){
+      return {messages:[judySleepReplies.slept],k:"sleep"};
+    }
+    if(lastNpc?.text===judySleepReplies.slept && /^\s*(?:你|妳)?\s*(?:居然|竟然)?\s*有設鬧鐘[？?。！!]?\s*$/.test(text)){
+      return {messages:judySleepReplies.alarm.slice(),k:"sleep"};
+    }
+  }
   const rules=[
     ["bye",/晚安|睡了|掰|拜拜|先這樣|下次聊|先下線/],
     ["love",/愛你|想你|喜歡你|抱抱|親親/],
@@ -648,6 +661,7 @@ const CHOICES={
       any:["哈，真的假的","然後呢？","我晚點打給你"]}}};
 const lastChoiceTurn={};
 function mockChoices(id,k,mode){
+  if(k==="sleep"){lastChoiceTurn[id]=false;return null}
   const bank=CHOICES[id]&&CHOICES[id][mode==="lover"?"lover":"friend"];
   if(!bank||lastChoiceTurn[id]||R()>.4){lastChoiceTurn[id]=false;return null}
   lastChoiceTurn[id]=true;return (bank[k]||bank.any).slice();
