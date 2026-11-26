@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="holo-card-layout-23">
+<meta name="nightline-version" content="desktop-centered-terminal-22">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -69,19 +69,6 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .head .idc>.layer-50{transform:translate3d(48px,-36px,-36px)}
 .head .idc>.layer-75{transform:translate3d(24px,-18px,-18px)}
 
-/* 參考遊戲全像卡：卡片較大、垂直置中於標題線並向下延伸；後層只剩暗色框；手機貼齊卡片底部 */
-.idslot{height:140px;margin-bottom:-40px;align-items:flex-end}
-.phone{width:22px;margin-bottom:6px}
-.head .idc{width:68px;height:104px}
-.head .idc>.layer-25{display:none}
-.head .idc>.layer-50{transform:translate3d(64px,-42px,-44px);opacity:.6}
-.head .idc>.layer-75{transform:translate3d(32px,-21px,-22px);opacity:.85}
-.head .idc>.card-layer b{background:linear-gradient(155deg,#3a1216,#1c0709 70%);border-color:rgba(177,75,81,.5);box-shadow:none}
-.head .idc>.card-layer img{display:none}
-.head .idc>.card-layer b::before,.head .idc>.card-layer b::after{display:none}
-.head .judy-card .card-front::before{left:0;right:0;top:15%;width:auto;height:2px;background:#1c0709;opacity:1}
-.head .judy-card .card-front .judy-avatar{top:calc(15% + 5px);height:calc(85% - 19px)}
-.body{margin-top:44px}
 
 .judy-card b{border-color:#b14b51;background:linear-gradient(155deg,#80343a,#42171d 65%,#63242a);box-shadow:inset 0 0 0 2px #3b171b}
 .judy-card b::before{inset:3px 3px auto;width:auto;height:3px;background:#c85559;opacity:.65}
@@ -241,13 +228,13 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   .stage{padding:0;gap:0}
   .term{width:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
   .head{grid-template-columns:82px minmax(0,1fr)}
-  .idslot{height:100px;margin-bottom:-24px;gap:8px}.phone{display:block;width:17px;margin-bottom:4px}
-  .idc{width:32px;height:48px}.head .idc{width:44px;height:68px}.head .idc b{font-size:15px}.head .idc b::before{display:none}.head .judy-card .card-front::before{display:block}
+  .idslot{height:84px;gap:8px}.phone{display:block;width:14px}
+  .idc{width:32px;height:48px}.head .idc{width:38px;height:58px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
   .tab{font-size:18px}.who{font-size:18px}.sep{width:16px}
   .redl{min-width:8px}
   .redl span{display:none}
   #sysId{display:none}.sys{gap:8px}
-  .body{margin-top:34px}
+  .body{margin-top:28px}
   .log{padding:4px 10px 14px 2px}
   .bub{max-width:86%}
   .hints{gap:4px 14px}.hint.static{display:none}.note{font-size:10px}
