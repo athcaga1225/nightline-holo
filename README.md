@@ -57,3 +57,10 @@ replyProvider.reply({ contactId, text, context })   // → string[] 或 { messag
 python3 -m http.server 8765      # 公開前端：http://127.0.0.1:8765/
 # 私人後端另見私人 repo 的 README
 ```
+
+
+## 四組原創對話的公開測試
+
+開網站網址加上 `?test=1`，或按輸入框下方「測試四組新對話」。選情境後，點建議的 V 台詞即可逐輪測試；亦可自由輸入，沒有對應時會明確說明是固定台詞 Mock。不是 AI，不呼叫私人後端或使用 Key。第二與第四組先由茱蒂開場；情境可切換及重新開始。
+
+測試紀錄使用每組獨立 IndexedDB，不遷移、清除或改寫一般聊天紀錄。公開 `mock-scenarios.js` 僅含使用者核准的專案原創台詞，不包含私人人格、System Prompt、官方原作摘錄或截圖。

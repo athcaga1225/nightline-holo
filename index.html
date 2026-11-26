@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
+<meta name="nightline-version" content="mock-four-dialogues-1">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -234,6 +235,8 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
 #dbg dl{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:3px 8px;margin:0}#dbg dt{color:var(--mute)}#dbg dd{margin:0}
 #dbg .dbtn{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}#dbg button,#dbg select,#dbg input{font:inherit;color:#d8e4e2;background:#1d0a0d;border:1px solid var(--red-d);padding:4px 8px;min-height:30px}
 #dbg .dbev{margin:0;padding-left:1.2em}#dbg .dbev span{color:var(--mute)}#dbg pre{white-space:pre-wrap;word-break:break-all;margin:0;color:#9fd6d6;font-size:12px}
+.mock-panel{border:1px solid var(--red-d);padding:10px 12px;margin:10px 0;background:rgba(20,3,6,.85);font-size:12px;flex-shrink:0}
+.mock-panel[hidden]{display:none}.mock-panel strong{color:var(--npc-t)}.mock-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:7px}.mock-controls select{background:#260b10;color:var(--ink);border:1px solid var(--red-d);padding:5px;max-width:200px}.mock-controls button,.mock-controls a{color:var(--v);text-decoration:underline}.mock-panel p{margin:7px 0 0;color:var(--mute);line-height:1.4}
 </style>
 </head>
 <body>
@@ -255,6 +258,11 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
       </div>
     </header>
 
+    <section id="mockPanel" class="mock-panel" hidden aria-label="原創對話測試">
+      <strong>四組新對話 · Mock，非 AI</strong>
+      <div class="mock-controls"><label for="mockScene">情境</label><select id="mockScene"></select><button id="mockRestart" type="button">重新開始</button><a href="./">回一般聊天</a></div>
+      <p id="mockStatus">點下方建議的 V 台詞即可繼續，也可自由輸入。這是固定台詞示範；測試紀錄獨立保存。</p>
+    </section>
     <div class="body">
       <div></div>
       <div class="logwrap">
@@ -279,7 +287,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
         <button class="hint" id="hC"><span class="key">C</span>聯絡人</button>
         <button class="hint" id="hI"><span class="key">I</span>資料</button>
         <button class="hint" id="hR"><span class="key">R</span>重設</button>
-        <span class="note">模擬模式・非官方粉絲作品</span>
+        <a class="hint" href="?test=1" id="mockEntry">測試四組新對話</a><span class="note">模擬模式・非官方粉絲作品</span>
       </div>
     </div>
   </main>
@@ -304,8 +312,30 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   </div>
 </div>
 
+<script src="./mock-scenarios.js"></script>
 <script>
 {
+const MOCK_TEST=new URLSearchParams(location.search).get("test")==="1";
+const MOCK_SCENES=window.NIGHTLINE_MOCK_SCENARIOS||[];
+const sceneNumber=Math.max(0,Math.min(MOCK_SCENES.length-1,Number(new URLSearchParams(location.search).get("scene"))||0));
+const activeScene=MOCK_SCENES[sceneNumber];
+const smsText=t=>t.replace(/妳/g,"你").replace(/[⋯…]+|[.．]{2,}/g,"⋯⋯");
+function approvedMock(recent,strict=false){
+  const list=MOCK_TEST?[activeScene]:MOCK_SCENES;
+  for(const scene of list){
+    const prefix=[];
+    for(let i=0;i<scene.turns.length;i++){
+      const turn=scene.turns[i];prefix.push(...turn.messages.map(text=>({role:turn.speaker==="V"?"user":"assistant",text})));
+      if(turn.speaker!=="V")continue;
+      if(recent.length<prefix.length||!prefix.every((m,j)=>{const r=recent[recent.length-prefix.length+j];return r.role===m.role&&r.text===m.text}))continue;
+      const next=scene.turns[i+1];
+      if(!next){if(MOCK_TEST)$("mockStatus").textContent="這組示範已結束，可以換一組測試";return {messages:[],choices:null}}
+      const following=scene.turns[i+2];
+      return {messages:next.messages.slice(),choices:following?.speaker==="V"?[following.messages.join("\n")]:null};
+    }
+  }
+  return strict?{messages:["這是固定台詞的Mock測試，這句尚未寫對應回覆。可重新開始，或選另一組示範；目前沒有呼叫AI。"],choices:null}:null;
+}
 const C={
   judy:{name:"茱蒂・艾法瑞茲",short:"茱蒂",en:"JUDY ALVAREZ",g:"茱",code:"JA-07",
     role:"幻舞技師",base:"夜城",
@@ -401,7 +431,7 @@ function personaOf(id,mode){
    每位 NPC 的訊息以 [contactId, seq] 為主鍵，各自占一段獨立的鍵範圍；
    清除、分頁、匯出都只作用在該 NPC 的範圍內。不設數量上限，也不會自動刪除。
    ============================================================ */
-const DB_NAME="nightline-holo",DB_VER=2;
+const DB_NAME=MOCK_TEST?"nightline-holo-demo-"+sceneNumber:"nightline-holo",DB_VER=2;
 const reqP=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const txDone=t=>new Promise((res,rej)=>{t.oncomplete=()=>res();t.onerror=()=>rej(t.error||new Error("寫入失敗"));
   t.onabort=()=>rej(t.error||new DOMException("寫入已中止","AbortError"))});
@@ -559,12 +589,12 @@ async function applySeedUpdates(store){
    ============================================================ */
 const BACKEND_KEY="nightline.backend";
 const backend={url:"",token:""};
-try{Object.assign(backend,JSON.parse(localStorage.getItem(BACKEND_KEY)||"{}"))}catch(e){}
+try{if(!MOCK_TEST)Object.assign(backend,JSON.parse(localStorage.getItem(BACKEND_KEY)||"{}"))}catch(e){}
 const tzName=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC"}catch(e){return"UTC"}};
 const clock={now:()=>Date.now()};
 async function api(path,body){
   const r=await fetch(backend.url.replace(/\/+$/,"")+path,{method:body?"POST":"GET",
-    headers:{"Content-Type":"application/json",...(backend.token?{Authorization:"Bearer "+backend.token}:{})},body:body?JSON.stringify(body):undefined});
+    headers:{"Content-Type":"application/json",...(backend.token?{Authorization:"Bearer "+backend.token}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(60000)});
   if(!r.ok)throw new Error("後端回應 "+r.status);return r.json();
 }
 const reqSettings=id=>({relationship:set[id].mode,timeline:set[id].timeline,proactive:set[id].proactive!==false});
@@ -591,9 +621,12 @@ const MockProvider={
   name:"mock",label:"MOCK",
   async reply({contactId,text,context}){
     await sleep(700+R()*900);                       /* 模擬網路與思考時間 */
+    if(contactId==="judy"&&context.relationship==="lover"){
+      const scripted=approvedMock(context.recent,MOCK_TEST);if(scripted)return scripted;
+    }
     const mode=context.relationship;
     const {messages,k}=mockCompose(contactId,text,context.recent,mode);
-    return {messages,choices:mockChoices(contactId,k,mode)};
+    return {messages:messages.map(smsText),choices:mockChoices(contactId,k,mode)?.map(smsText)||null};
   }
 };
 const BackendProvider={
@@ -615,6 +648,13 @@ const judySleepReplies = {
 function mockCompose(id,text,recent,mode){
   const lv=C[id].lover&&mode==="lover"?C[id].lover.pool:null,p=lv?{...C[id].pool,...lv}:C[id].pool,lastNpc=[...recent].reverse().find(m=>m.role==="assistant");
   if(id==="judy" && mode==="lover"){
+    if(lastNpc?.text==="你是為了哪件事道歉？"){
+      if(/口氣/.test(text))return {messages:["剛剛那句是有點刺。","你在氣什麼？跟我說，別拿我當靶子。"],k:"sorryReason"};
+      if(/等/.test(text))return {messages:["我有在等，也有點擔心。","下次晚到先傳一聲。你現在到哪了？"],k:"sorryReason"};
+      if(/開口/.test(text))return {messages:["那就慢慢講，我在。","不用先替我決定我會不會生氣。"],k:"sorryReason"};
+      return {messages:[`你說「${text}」。我有在聽。`,"這件事是什麼時候發生的？"],k:"sorryReason"};
+    }
+    if(/^(?:對不起|抱歉|不好意思)[。！!…]*$/.test(text.trim()))return {messages:["你是為了哪件事道歉？"],k:"sorryClarify"};
     if(/^(?:你)?\s*(?:今天|明天)?\s*(?:是)?(?:幾點(?:要|才)?上班|上班是?幾點|幾點開工)(?:嗎|啊|呀|呢)?[？?。]?$/u.test(text.trim())){
       return {messages:["晚點才會出發，你是想過來找我嗎？"],k:"workHours"};
     }
@@ -670,9 +710,11 @@ const CHOICES={
 const lastChoiceTurn={};
 function mockChoices(id,k,mode){
   if(k==="sleep" || (id==="judy" && mode==="lover" && ["dayOff","q","any","checkIn","workHours"].includes(k))){lastChoiceTurn[id]=false;return null}
+  if(k==="sorryClarify")return ["剛剛口氣有點差","讓你等太久了","我還不知道怎麼開口"];
+  if(k==="sorryReason")return null;
   const bank=CHOICES[id]&&CHOICES[id][mode==="lover"?"lover":"friend"];
-  if(!bank||lastChoiceTurn[id]||R()>.4){lastChoiceTurn[id]=false;return null}
-  lastChoiceTurn[id]=true;return (bank[k]||bank.any).slice();
+  if(!bank||!bank[k]||lastChoiceTurn[id]||R()>.4){lastChoiceTurn[id]=false;return null}
+  lastChoiceTurn[id]=true;return bank[k].slice();
 }
 let replyProvider=backend.url?BackendProvider:MockProvider;
 
@@ -893,7 +935,7 @@ log.addEventListener("keydown",e=>{const o=e.target.closest(".opt");if(!o||!/^Ar
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"&&ready)ORDER.forEach(id=>{if(setTimers[id]){clearTimeout(setTimers[id]);setTimers[id]=0;saveSettings(id)}})});
 
 /* ---- 切換／面板 ---- */
-async function switchTo(id){if(!C[id]||!ready)return;scrollPos[app.active]=nearBottom()?null:log.scrollTop;
+async function switchTo(id){if(MOCK_TEST&&id!=="judy")return;if(!C[id]||!ready)return;scrollPos[app.active]=nearBottom()?null:log.scrollTop;
   app.active=id;saveApp();if(set[id].unread){set[id].unread=0;saveSettings(id)}newCount=0;
   await openRoom(id);if(app.active!==id)return;
   renderLog();renderHead();ta.value=set[id].draft||"";size();
@@ -922,12 +964,12 @@ async function resetContact(id){
   const fresh={id,draft:"",unread:0,mode:set[id].mode,choices:null,seeded:true};
   try{
     await store.clearContact(id,fresh);
-    const now=clock.now(),seeded=await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
+    const now=clock.now(),seeded=await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
     set[id]=fresh;win[id]={msgs:seeded,hasMore:false,loading:false,loaded:true};lastMsg[id]=seeded[seeded.length-1]||null;
     failures.splice(0,failures.length,...failures.filter(f=>!f.key.includes(":"+id)));renderSbar();
   }catch(e){fail("reset:"+id,`${C[id].short}的重設沒有完成`,e,()=>resetContact(id))}
   if(app.active===id){ta.value="";size();renderLog();toBottom()}renderHead();if(sheet.classList.contains("open"))renderSheet();ta.focus()}
-$("hR").onclick=askReset;
+$("hR").onclick=MOCK_TEST?restartMock:askReset;
 
 /* ---- 匯出／匯入 ---- */
 const EXPORT_FORMAT="nightline-holo-chat";
@@ -1045,32 +1087,49 @@ async function boot(){
   store=IndexedDBStore();
   try{await store.open();store.onlost=e=>{fatalErr=e;renderSbar()}}
   catch(e){fatalErr=e;store=MemoryStore();await store.open()}
-  try{const r=await migrateLegacy(store);if(r.status==="migrated")console.info("[NIGHTLINE] 已從 localStorage 遷移",r.result)}
+  try{const r=MOCK_TEST?{status:"skipped"}:await migrateLegacy(store);if(r.status==="migrated")console.info("[NIGHTLINE] 已從 localStorage 遷移",r.result)}
   catch(e){fail("migrate","舊版紀錄還沒有搬進新資料庫，原資料仍完整保留",e,async()=>{await migrateLegacy(store);location.reload()})}
-  try{await applySeedUpdates(store)}catch(e){fail("seedtext","開場台詞更新沒有完成（不影響其他紀錄）",e,()=>applySeedUpdates(store))}
+  try{if(!MOCK_TEST)await applySeedUpdates(store)}catch(e){fail("seedtext","開場台詞更新沒有完成（不影響其他紀錄）",e,()=>applySeedUpdates(store))}
   try{
     const a=await store.getMeta("app");if(a&&C[a.active])app.active=a.active;
     for(const id of ORDER){const s=await store.getSettings(id);if(s)set[id]={...set[id],...s,id}}
     for(const id of ORDER){
       if(!set[id].seeded){
-        if(await store.count(id)===0){const now=clock.now();await store.addMessages(id,C[id].seed.map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
+        if(await store.count(id)===0){const now=clock.now();await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
         set[id].seeded=true;await store.putSettings({...set[id]});
       }
       const last=await store.latest(id,1);lastMsg[id]=last[0]||null;
     }
   }catch(e){fail("boot","初始資料讀取失敗",e,()=>location.reload())}
   try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}
+  if(MOCK_TEST){
+    app.active="judy";set.judy.mode="lover";
+    if(await store.count("judy")===(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.length:0)){
+      const firstV=activeScene.turns.find(t=>t.speaker==="V");set.judy.choices=firstV?[firstV.messages.join("\n")]:null;
+    }
+  }
   await openRoom(app.active);
   ready=true;renderHead();renderLog();ta.value=set[app.active].draft||"";size();toBottom();
   if(fatalErr)renderSbar();
 }
+async function restartMock(){
+  if(!MOCK_TEST||pend.judy)return;
+  await store.clearContact("judy",{...set.judy,seeded:false,draft:"",choices:null});location.reload();
+}
+function showMockPanel(){
+  const panel=$("mockPanel");panel.hidden=false;
+  $("mockScene").innerHTML=MOCK_SCENES.map((x,i)=>`<option value="${i}"${i===sceneNumber?" selected":""}>${i+1}・${esc(x.title)}</option>`).join("");
+  $("mockScene").onchange=e=>{const u=new URL(location.href);u.searchParams.set("scene",e.target.value);u.hash="";location.href=u.href};
+  $("mockRestart").onclick=restartMock;
+}
 const readyP=boot().then(async()=>{
+  if(MOCK_TEST)showMockPanel();
   await syncBackend("on_open");
   setInterval(()=>syncBackend("while_open"),60*1000);       /* 後端依實際時間差推進，不依賴計時器準時 */
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")syncBackend("while_open")});
-  if(location.hash==="#debug")renderDebug();
+  if(!MOCK_TEST&&location.hash==="#debug")renderDebug();
 });
-window.addEventListener("hashchange",()=>{if(location.hash==="#debug")renderDebug();else{const d=$("dbg");if(d)d.remove()}});
+window.addEventListener("hashchange",()=>{if(!MOCK_TEST&&location.hash==="#debug")renderDebug();else{const d=$("dbg");if(d)d.remove()}});
 /* 開發與測試用：在主控台可用 NIGHTLINE.store 檢查資料 */
 window.NIGHTLINE={get store(){return store},ready:readyP,buildExport,buildContext,get settings(){return set},
   get provider(){return replyProvider.name},syncBackend};
