@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="portrait-perspective-16">
+<meta name="nightline-version" content="portrait-upright-controls-17">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -19,6 +19,7 @@ LAYOUT  桌機靠左約四成寬；面板按需開啟；手機全寬，輸入區
 */
 :root{
   color-scheme:dark;
+  --control-cyan:#70e6ed;--control-red:#ee4f55;--control-ink:#102d32;
   --header-cyan:#76d7e0;--red:#d9464e;--red-d:rgba(217,70,78,.55);--red-f:rgba(217,70,78,.16);
   --npc:#58c2c0;--npc-t:#e4f2f0;--npc-bg:rgba(70,160,160,.12);
   --v:#6fdfa7;--v-t:#a9f1cc;--v-bg:rgba(80,190,135,.11);
@@ -61,12 +62,12 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 .idc>.layer-75{transform:translate(3px,-4px);opacity:.75;z-index:3}
 .idc>.card-front{opacity:1;z-index:4;filter:none}
 .idc.judy-card{transform:perspective(400px) rotateY(-7deg) skewY(4deg)}
-/* 四張卡片沿 Z 軸往後排列，讓透視自然產生大小與位置差異。 */
-.head .idc{width:60px;height:91px;transform-style:preserve-3d;transform:perspective(280px) rotateY(-34deg) rotateX(8deg) rotateZ(4deg);transform-origin:left center}
+/* 保持卡片側邊直立；水平透視搭配上下斜邊，四層向右後方展開。 */
+.head .idc{width:60px;height:91px;transform-style:preserve-3d;transform:perspective(500px) rotateY(36deg) skewY(24deg);transform-origin:left center}
 .head .idc>.card-front{transform:translateZ(0)}
-.head .idc>.layer-25{transform:translate3d(0,-12px,-36px)}
-.head .idc>.layer-50{transform:translate3d(0,-8px,-24px)}
-.head .idc>.layer-75{transform:translate3d(0,-4px,-12px)}
+.head .idc>.layer-25{transform:translate3d(48px,-36px,-36px)}
+.head .idc>.layer-50{transform:translate3d(32px,-24px,-24px)}
+.head .idc>.layer-75{transform:translate3d(16px,-12px,-12px)}
 
 
 .judy-card b{border-color:#b14b51;background:linear-gradient(155deg,#80343a,#42171d 65%,#63242a);box-shadow:inset 0 0 0 2px #3b171b}
@@ -157,17 +158,17 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 textarea{position:relative;flex:1;resize:none;border:0;outline:0;background:transparent;color:var(--v-t);
   font:500 16px/1.5 "Noto Sans TC",sans-serif;padding:4px 0;height:32px;max-height:132px;overflow-y:auto;scrollbar-width:thin}
 textarea::placeholder{color:rgba(120,223,184,.32)}
-.send{position:relative;flex:none;height:34px;padding:0 2px 0 4px;display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;color:var(--red);background:none}
-.send .k{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#bfe9ea;color:#0b1a1c;transition:background .15s}
+.send{position:relative;flex:none;height:34px;padding:0 2px 0 4px;display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;color:var(--control-red);background:none}
+.send .k{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--control-cyan);color:var(--control-ink);transition:background .15s}
 .send .k svg{width:11px;height:11px;margin-left:2px}
 .send:disabled{color:var(--mute);cursor:default}
 .send:disabled .k{background:rgba(191,233,234,.2);color:#cfe4e2}
 .send:not(:disabled):hover .k{background:#fff}
 .hints{grid-column:2;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin-top:10px;font-size:13px}
-.hint{display:flex;align-items:center;gap:7px;color:var(--red);min-height:28px;white-space:nowrap}
-.hint.static{color:var(--mute)}
-.key{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#bfe9ea;color:#0b1a1c;font:600 12px/1 Rajdhani,sans-serif}
-.hint.static .key{background:rgba(191,233,234,.22);color:#cfe4e2}
+.hint{display:flex;align-items:center;gap:7px;color:var(--control-red);min-height:28px;white-space:nowrap}
+.hint.static{color:var(--control-red)}
+.key{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:var(--control-cyan);color:var(--control-ink);font:600 12px/1 Rajdhani,sans-serif}
+.hint.static .key{background:var(--control-cyan);color:var(--control-ink)}
 .note{margin-left:auto;font-size:11px;color:var(--mute);opacity:.8}
 
 /* ---------- 面板 ---------- */
