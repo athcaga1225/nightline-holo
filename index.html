@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="portrait-chat-gap-15px-21">
+<meta name="nightline-version" content="desktop-centered-terminal-22">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -11,11 +11,11 @@
 <style>
 /*
 VOICE   安靜、俐落的遊戲內私訊終端，資訊密度高但不吵
-IDEA    夜城的全像訊息介面：靠左的單一終端，右側留給城市的黑
+IDEA    夜城的全像訊息介面：置中的單一終端，兩側保留暗色空間
 PICTURE 對話本身：細線切角訊息框、紅色識別卡、紅色捲軸線
 COLOUR  紅黑漸層底；暗紅線條與提示；NPC 青藍、V 薄荷綠
 TYPE    Noto Sans TC 500 內文；Rajdhani 只用在英文系統小字
-LAYOUT  桌機靠左約四成寬；面板按需開啟；手機全寬，輸入區貼底
+LAYOUT  桌機終端水平置中；面板按需開啟；手機全寬，輸入區貼底
 */
 :root{
   color-scheme:dark;
@@ -44,8 +44,8 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 *{-webkit-tap-highlight-color:transparent}
 .en{font-family:Rajdhani,"Noto Sans TC",sans-serif;font-weight:600;letter-spacing:.04em}
 
-.stage{height:var(--app-h);display:flex;align-items:stretch;gap:32px;
-  padding:clamp(24px,8vh,84px) 0 clamp(14px,3.5vh,36px) clamp(12px,4.5vw,92px)}
+.stage{height:var(--app-h);display:flex;justify-content:center;align-items:stretch;gap:32px;
+  padding:clamp(24px,8vh,84px) clamp(12px,4.5vw,92px) clamp(14px,3.5vh,36px)}
 .term{width:clamp(500px,40vw,660px);display:flex;flex-direction:column;min-height:0}
 
 /* ---------- 標題列 ---------- */
@@ -173,7 +173,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
 .note{margin-left:auto;font-size:11px;color:var(--mute);opacity:.8}
 
 /* ---------- 面板 ---------- */
-.sheet{display:none;flex-direction:column;width:330px;align-self:flex-start;margin-top:110px;max-height:calc(100% - 110px);
+.sheet{display:none;flex-direction:column;position:fixed;right:16px;top:calc(clamp(24px,8vh,84px) + 110px);bottom:clamp(14px,3.5vh,36px);width:min(330px,calc(50vw - clamp(250px,20vw,330px) - 40px));z-index:20;
   background:rgba(22,6,8,.9);border:1px solid var(--red-d);clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)}
 .sheet.open{display:flex}
 .sh-h{display:flex;align-items:center;border-bottom:1px solid var(--red-f);padding:0 6px 0 14px}
