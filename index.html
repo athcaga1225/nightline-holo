@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-slower-3">
+<meta name="nightline-version" content="mock-interaction-4">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -222,7 +222,6 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   .tab span{display:none}.tab{font-size:18px}.who{font-size:18px}.sep{width:16px}
   .redl span{display:none}
   #sysId{display:none}.sys{gap:8px}
-  .term.typing-on .hints{display:none}
   .body{margin-top:12px}
   .log{padding:4px 10px 14px 2px}
   .bub{max-width:86%}
@@ -328,13 +327,19 @@ function approvedMock(recent,strict=false){
   for(const scene of list){
     const prefix=[];
     for(let i=0;i<scene.turns.length;i++){
-      const turn=scene.turns[i];prefix.push(...turn.messages.map(text=>({role:turn.speaker==="V"?"user":"assistant",text})));
-      if(turn.speaker!=="V")continue;
-      if(recent.length<prefix.length||!prefix.every((m,j)=>{const r=recent[recent.length-prefix.length+j];return r.role===m.role&&r.text===m.text}))continue;
-      const next=scene.turns[i+1];
-      if(!next){if(MOCK_TEST)$("mockStatus").textContent="這組示範已結束，可以重新開始";return {messages:[],choices:null}}
-      const following=scene.turns[i+2];
-      return {messages:next.messages.slice(),choices:following?.speaker==="V"?[following.messages.join("\n")]:null};
+      const turn=scene.turns[i];
+      for(let j=0;j<turn.messages.length;j++){
+        prefix.push({role:turn.speaker==="V"?"user":"assistant",text:turn.messages[j]});
+        if(recent.length<prefix.length||!prefix.every((m,k)=>{const r=recent[recent.length-prefix.length+k];return r.role===m.role&&r.text===m.text}))continue;
+        if(turn.speaker==="V"){
+          if(j+1<turn.messages.length)return {messages:[],choices:[turn.messages[j+1]],awaitingV:true};
+          const next=scene.turns[i+1];
+          if(!next){if(MOCK_TEST)$("mockStatus").textContent="這組示範已結束，可以重新開始";return {messages:[],choices:null,finished:true}}
+          const following=scene.turns[i+2];
+          return {messages:next.messages.slice(),choices:following?.speaker==="V"?[following.messages[0]]:null};
+        }
+        if(j===turn.messages.length-1&&scene.turns[i+1]?.speaker==="V")return {messages:[],choices:[scene.turns[i+1].messages[0]],awaitingV:true};
+      }
     }
   }
   return strict?{messages:["這是固定台詞的Mock測試，這句尚未寫對應回覆。可重新開始，或選另一組示範；目前沒有呼叫AI。"],choices:null}:null;
@@ -934,7 +939,9 @@ async function sendText(text){
     if(testSending||pend.judy)return;testSending=true;set.judy.choices=null;saveSettings("judy");renderLog();size();
     const lines=text.split(/\r?\n/).filter(x=>x.trim());
     try{for(let i=0;i<lines.length;i++){if(i)await sleep(650);await deliver("judy",lines[i],"v");toBottom()}
-      requestReply("judy",lines[lines.length-1]);
+      const step=approvedMock((await buildContext("judy")).recent);
+      if(step?.awaitingV||step?.finished){set.judy.choices=step.choices;await saveSettings("judy");renderLog();toBottom()}
+      else requestReply("judy",lines[lines.length-1]);
     }finally{testSending=false;size()}
     return;
   }
@@ -976,7 +983,7 @@ async function resetContact(id){
   const fresh={id,draft:"",unread:0,mode:set[id].mode,choices:null,seeded:true};
   try{
     await store.clearContact(id,fresh);
-    const now=clock.now(),seeded=await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.slice(0,1).map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
+    const now=clock.now(),seeded=await store.addMessages(id,(MOCK_TEST&&id==="judy"?[]:C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})));
     set[id]=fresh;win[id]={msgs:seeded,hasMore:false,loading:false,loaded:true};lastMsg[id]=seeded[seeded.length-1]||null;
     failures.splice(0,failures.length,...failures.filter(f=>!f.key.includes(":"+id)));renderSbar();
   }catch(e){fail("reset:"+id,`${C[id].short}的重設沒有完成`,e,()=>resetContact(id))}
@@ -1107,7 +1114,7 @@ async function boot(){
     for(const id of ORDER){const s=await store.getSettings(id);if(s)set[id]={...set[id],...s,id}}
     for(const id of ORDER){
       if(!set[id].seeded){
-        if(await store.count(id)===0){const now=clock.now();await store.addMessages(id,(MOCK_TEST&&id==="judy"?(activeScene.turns[0].speaker==="judy"?activeScene.turns[0].messages.slice(0,1).map(text=>[0,"n",text]):[]):C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
+        if(await store.count(id)===0){const now=clock.now();await store.addMessages(id,(MOCK_TEST&&id==="judy"?[]:C[id].seed).map(([m,f,t])=>({from:f,text:t,t:now+m*60000})))}
         set[id].seeded=true;await store.putSettings({...set[id]});
       }
       const last=await store.latest(id,1);lastMsg[id]=last[0]||null;
@@ -1136,12 +1143,9 @@ const readyP=boot().then(async()=>{
         for(let i=saved.length;i<initial.messages.length;i++){setTyping("judy",true);await sleep(npcPause(initial.messages[i]));await deliver("judy",initial.messages[i])}
         setTyping("judy",false);
       }
-      const history=(await buildContext("judy")).recent,prefix=[];
-      if(!history.length&&initial.speaker==="V")set.judy.choices=[initial.messages.join("\n")];
-      for(let i=0;i<activeScene.turns.length;i++){
-        const turn=activeScene.turns[i];prefix.push(...turn.messages.map(text=>({role:turn.speaker==="V"?"user":"assistant",text})));
-        if(turn.speaker==="judy"&&activeScene.turns[i+1]?.speaker==="V"&&history.length>=prefix.length&&prefix.every((m,j)=>{const r=history[history.length-prefix.length+j];return r.role===m.role&&r.text===m.text}))set.judy.choices=[activeScene.turns[i+1].messages.join("\n")];
-      }
+      const history=(await buildContext("judy")).recent;
+      if(!history.length&&initial.speaker==="V")set.judy.choices=[initial.messages[0]];
+      else{const step=approvedMock(history);if(step?.awaitingV)set.judy.choices=step.choices}
       await saveSettings("judy");renderLog();
     }finally{testSending=false;size()}
   }
