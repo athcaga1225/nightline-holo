@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
-<meta name="nightline-version" content="mock-reference-header-9">
+<meta name="nightline-version" content="mock-phone-blur-10">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,interactive-widget=resizes-content">
 <title>NIGHTLINE // HOLO</title>
@@ -50,14 +50,14 @@ textarea,textarea:focus,textarea:focus-visible{outline:none;box-shadow:none}
 /* ---------- 標題列 ---------- */
 .head{display:grid;grid-template-columns:var(--gut) minmax(0,1fr);align-items:end}
 .idslot{position:relative;height:92px;display:flex;align-items:flex-end;gap:10px;padding-bottom:2px}
-.phone{width:13px;color:var(--header-cyan);opacity:.75;margin-bottom:14px;flex:none}
+.phone{width:14px;color:var(--header-cyan);opacity:.75;margin-bottom:14px;flex:none}
 .idc{position:relative;width:50px;height:76px;flex:none;transform:perspective(260px) rotateY(20deg);transform-origin:left center}
-.idc i{position:absolute;inset:0;transform:translate(-7px,-8px);border:1px solid var(--red-d);background:rgba(217,70,78,.14)}
+.idc i{position:absolute;inset:0;transform:translate(-7px,-8px);border:1px solid var(--red-d);background:rgba(217,70,78,.14);filter:blur(1.6px);opacity:.72}
 .idc b{position:absolute;inset:0;border:1px solid var(--red);background:linear-gradient(160deg,rgba(217,70,78,.62),rgba(140,30,38,.42));
   display:grid;place-items:center;font-size:22px;font-weight:700;color:#ffe3e3;line-height:1}
 .idc.judy-card{transform:perspective(400px) rotateY(-7deg) skewY(4deg)}
 .judy-card i{inset:1px 1px 0;transform:translate(3px,-4px);border-color:#87343b;background:#46191c}
-.judy-card::before{content:"";position:absolute;inset:2px 2px 0;transform:translate(6px,-8px);border:1px solid #682b30;background:#321317}
+.judy-card::before{content:"";position:absolute;inset:2px 2px 0;transform:translate(6px,-8px);border:1px solid #682b30;background:#321317;filter:blur(2.3px);opacity:.65}
 .judy-card b{border-color:#b14b51;background:linear-gradient(155deg,#80343a,#42171d 65%,#63242a);box-shadow:inset 0 0 0 2px #3b171b}
 .judy-card b::before{inset:3px 3px auto;width:auto;height:3px;background:#c85559;opacity:.65}
 .judy-avatar{display:block;width:calc(100% - 4px);aspect-ratio:1;object-fit:contain}
@@ -212,7 +212,7 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   .stage{padding:0;gap:0}
   .term{width:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
   .head{grid-template-columns:66px minmax(0,1fr)}
-  .idslot{height:58px;gap:8px}.phone{display:block;width:12px}
+  .idslot{height:58px;gap:8px}.phone{display:block;width:13px}
   .idc{width:32px;height:48px}.head .idc b{font-size:15px}.head .idc b::before{display:none}
   .tab{font-size:18px}.who{font-size:18px}.sep{width:16px}
   .redl{min-width:8px}
@@ -238,7 +238,13 @@ textarea::placeholder{color:rgba(120,223,184,.32)}
   <main class="term" aria-label="NIGHTLINE 私訊終端">
     <header class="head">
       <div class="idslot">
-        <svg class="phone" viewBox="0 0 13 22" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="1" y="5" width="8" height="15"/><path d="M3 16h4M8 3c1.5 0 3 1 3.5 2.5M8 .8c2.6 0 4.4 1.6 4.8 4"/></svg>
+        <svg class="phone" viewBox="0 0 18 34" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+          <path d="M3.5 8.5h9v22h-9z" fill="currentColor" fill-opacity=".13"/>
+          <path d="M5 8.5V5.7h2.5v2.8M5 28.6h6"/>
+          <rect x="5" y="11" width="6" height="10.5" fill="#102126"/>
+          <path d="M5 24h1M7.5 24h1M10 24h1M5 26h1M7.5 26h1M10 26h1" stroke-width="1.25"/>
+          <path d="M10 5.8c1.8 0 3.2 1.1 3.5 2.6M10.6 3.3c2.9 0 5.1 1.9 5.5 4.5M11.3 1c3.6.2 5.7 2.7 6 5.5" stroke-linecap="round"/>
+        </svg>
         <div id="idcard"></div>
       </div>
       <div class="tw">
